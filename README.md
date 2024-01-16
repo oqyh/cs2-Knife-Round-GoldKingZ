@@ -28,7 +28,7 @@
   //Knife Round Time (In Mins)
   "KnifeRoundTimer": 1,
   
-  //Knife Round Time (In Secs)
+  //Time To Vote Pick Team (In Secs)
   "VoteTimer": 50,
 //-----------------------------------------------------------------------------------------
   "ConfigVersion": 1
