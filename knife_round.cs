@@ -76,8 +76,8 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
             if(TWINNER == true || CTWINNER == true)
             {
                 var playerEntities = Utilities.FindAllEntitiesByDesignerName<CCSPlayerController>("cs_player_controller");
-                var countct = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.CounterTerrorist);
-                var countt = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.Terrorist);
+                var countct = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.CounterTerrorist && !p.IsHLTV);
+                var countt = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.Terrorist && !p.IsHLTV);
                 string Close = "</font>";
                 string Red = "<font color='Red'>";
                 string Cyan = "<font color='cyan'>";
@@ -538,7 +538,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
             _rtvCountCT.Add(player.SteamID);
             
             
-            var councT = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.Terrorist);
+            var councT = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.Terrorist && !p.IsHLTV);
             var required = (int)Math.Ceiling(councT * 0.6);
             currentVotesCT = _rtvCountCT.Count;
 
@@ -602,7 +602,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
             if (_rtvCountCT.Contains(player!.SteamID))return;
             _rtvCountCT.Add(player.SteamID);
 
-            var councCT = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.CounterTerrorist);
+            var councCT = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.CounterTerrorist && !p.IsHLTV);
             var required = (int)Math.Ceiling(councCT * 0.6);
             currentVotesCT = _rtvCountCT.Count;
 
@@ -670,7 +670,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
             if (_rtvCountT.Contains(player!.SteamID))return;
             _rtvCountT.Add(player.SteamID);
             
-            var councCT = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.CounterTerrorist);
+            var councCT = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.CounterTerrorist && !p.IsHLTV);
             var required = (int)Math.Ceiling(councCT * 0.6);
             currentVotesT = _rtvCountT.Count;
 
@@ -736,7 +736,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
             if (_rtvCountT.Contains(player!.SteamID))return;
             _rtvCountT.Add(player.SteamID);
             
-            var councT = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.Terrorist);
+            var councT = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.Terrorist && !p.IsHLTV);
             var required = (int)Math.Ceiling(councT * 0.6);
             currentVotesT = _rtvCountT.Count;
 
