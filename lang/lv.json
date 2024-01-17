@@ -1,0 +1,6 @@
+{
+	"Knife_Start_Message": "{21} {13}Nažu Raunds{0} {22} {14} {14} {6}Uzvarētāji izvēlēsies komandu kurā spēlēt{0}",
+	"Winner_Message": "{6}Balso lai izvēlētos komandu{0} {14} {1}==Laiks palicis: {20} sek. =={0} {14} {7}!ct{0} {11}CT komanda{0} {14} {7}!t{0} {11}T komanda{0} {14} Balsis par {15} [{17} / {19}] {14} Balsis par {16} [{18} / {19}]",
+	"When_T_Lose": "{13}Gaidam līdz{0} {3}CT{0} {13}komanda pabeigs balsot{0}",
+	"When_CT_Lose": "{13}Gaidam līdz{0} {1}T{0} {13}komanda pabeigs balsot{0}"
+}
