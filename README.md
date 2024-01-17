@@ -1,4 +1,4 @@
-# [CS2] Knife-Round (1.0.1)
+# [CS2] Knife-Round (1.0.2)
 
 ### Creates An Additional Round With Knifes After Warmup
 
@@ -81,6 +81,13 @@
 
 ## .:[ Change Log ]:.
 ```
+(1.0.2)
+-Fix Some Bugs
+-Fix Exploit Droping Gun Before Round Start
+-Fix Timer Carry 0 Timer to Next Map
+-Fix Team Winner Counting
+-Remove HLTV from Counting
+
 (1.0.1)
 -Fix Crash
 -Fix Some Bugs
