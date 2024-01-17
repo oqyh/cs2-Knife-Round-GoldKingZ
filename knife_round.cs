@@ -24,7 +24,7 @@ public class KnifeRoundConfig : BasePluginConfig
 public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig> 
 {
     public override string ModuleName => "Knife Round";
-    public override string ModuleVersion => "1.0.1";
+    public override string ModuleVersion => "1.0.2";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "Creates An Additional Round With Knifes After Warmup";
     public KnifeRoundConfig Config { get; set; } = new KnifeRoundConfig();
@@ -57,11 +57,9 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
     }
     public override void Load(bool hotReload)
     {
-        timer = Config.VoteTimer;
         RegisterListener<Listeners.OnTick>(OnTick);
         AddCommandListener("jointeam", OnCommandJoinTeam, HookMode.Pre);
         RegisterListener<Listeners.OnMapEnd>(OnMapEnd);
-        stopwatch.Start();
     }
     private HookResult OnCommandJoinTeam(CCSPlayerController? player, CommandInfo commandInfo)
     {
@@ -126,7 +124,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                             StringBuilder builder = new StringBuilder();
                             var required = (int)Math.Ceiling(countt * 0.6);
 
-                            builder.AppendFormat(Localizer["Winner_Message"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine,CTIMAGE, TIMAGE, currentVotesCT, currentVotesT, required,timer);
+                            builder.AppendFormat(Localizer["Winner_Message"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine,CTIMAGE, TIMAGE, currentVotesCT, currentVotesT, required,timer, KnifeLeft, KnifeRight);
                             var centerhtml = builder.ToString();
                             player?.PrintToCenterHtml(centerhtml);
                         }
@@ -137,7 +135,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                             StringBuilder builder = new StringBuilder();
                             var required = (int)Math.Ceiling(countct * 0.6);
 
-                            builder.AppendFormat(Localizer["Winner_Message"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine,CTIMAGE, TIMAGE, currentVotesCT, currentVotesT, required,timer);
+                            builder.AppendFormat(Localizer["Winner_Message"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine,CTIMAGE, TIMAGE, currentVotesCT, currentVotesT, required,timer, KnifeLeft, KnifeRight);
                             var centerhtml = builder.ToString();
                             player?.PrintToCenterHtml(centerhtml);
                             
@@ -146,7 +144,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                             StringBuilder builder = new StringBuilder();
                             var required = (int)Math.Ceiling(countct * 0.6);
 
-                            builder.AppendFormat(Localizer["When_T_Lose"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine,CTIMAGE, TIMAGE, currentVotesCT, currentVotesT, required,timer);
+                            builder.AppendFormat(Localizer["When_T_Lose"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine,CTIMAGE, TIMAGE, currentVotesCT, currentVotesT, required,timer, KnifeLeft, KnifeRight);
                             var centerhtml = builder.ToString();
                             player?.PrintToCenterHtml(centerhtml);
                         }
@@ -448,7 +446,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                 {
                     Server.ExecuteCommand($"sv_alltalk true; sv_deadtalk true; sv_full_alltalk true; sv_talk_enemy_dead true; sv_talk_enemy_living true;");
                 }
-                AddTimer(1.0f, () =>
+                AddTimer(0.1f, () =>
                 {
                     foreach (var p in Utilities.GetPlayers().Where(p => p is { IsValid: true, PawnIsAlive: true }))
                     {
@@ -467,26 +465,32 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
         if (@event == null || !knifemode) return HookResult.Continue;
 
         var playerEntities = Utilities.FindAllEntitiesByDesignerName<CCSPlayerController>("cs_player_controller");
-
+        
+        stopwatch.Start();
+        timer = Config.VoteTimer;
         int countt = 0;
         int countct = 0;
-        int thealth = 0;
-        int cthealth = 0;
 
         foreach (var player in playerEntities)
         {
             if (player == null || !player.IsValid || player.PlayerPawn == null || !player.PlayerPawn.IsValid || player.PlayerPawn.Value == null || !player.PlayerPawn.Value.IsValid)
                 continue;
 
-            int teamNum = player.TeamNum;
-            var alive =  player.PlayerPawn.Value.LifeState == (byte)LifeState_t.LIFE_ALIVE;
-            countt = Utilities.GetPlayers().Count(p => player.PlayerPawn.Value.LifeState == (byte)LifeState_t.LIFE_ALIVE && player.TeamNum == (int)CsTeam.Terrorist);
-            countct = Utilities.GetPlayers().Count(p => player.PlayerPawn.Value.LifeState == (byte)LifeState_t.LIFE_ALIVE && player.TeamNum == (int)CsTeam.CounterTerrorist);
-            if (teamNum == 2 && alive)
-                thealth = player.PlayerPawn.Value.Health;
+            if (player.TeamNum == (int)CsTeam.Terrorist && player.PlayerPawn.Value.LifeState == (byte)LifeState_t.LIFE_ALIVE)
+            {
+                countt++;
+            }
+        }
 
-            else if (teamNum == 3 && alive)
-                cthealth = player.PlayerPawn.Value.Health;
+        foreach (var players in playerEntities)
+        {
+            if (players == null || !players.IsValid || players.PlayerPawn == null || !players.PlayerPawn.IsValid || players.PlayerPawn.Value == null || !players.PlayerPawn.Value.IsValid)
+                continue;
+
+            if (players.TeamNum == (int)CsTeam.CounterTerrorist && players.PlayerPawn.Value.LifeState == (byte)LifeState_t.LIFE_ALIVE)
+            {
+                countct++;
+            }
         }
 
         if (countt > countct)
@@ -495,7 +499,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
             TWINNER = true;
             knifemode = false;
         }
-        else if (countt < countct)
+        else if (countct > countt)
         {
             BlockTeam = true;
             CTWINNER = true;
@@ -503,27 +507,14 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
         }
         else
         {
-            if (cthealth > thealth)
-            {
-                BlockTeam = true;
-                CTWINNER = true;
-                knifemode = false;
-            }
-            else if (thealth > cthealth)
-            {
-                BlockTeam = true;
-                TWINNER = true;
-                knifemode = false;
-            }
-            else // thealth == cthealth
-            {
-                BlockTeam = true;
-                CTWINNER = true;
-                knifemode = false;
-            }
+            BlockTeam = true;
+            CTWINNER = true;
+            knifemode = false;
         }
+
         return HookResult.Continue;
     }
+
     [ConsoleCommand("css_ct", "change to ct")]
     [CommandHelper(whoCanExecute:CommandUsage.CLIENT_ONLY)]
     public void ChangeToCTTeamCommand(CCSPlayerController? player, CommandInfo cmd)
