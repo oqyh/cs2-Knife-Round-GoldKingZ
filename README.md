@@ -84,6 +84,7 @@
 (1.0.2)
 -Fix Some Bugs
 -Fix Exploit Droping Gun Before Round Start
+-Fix Exploit Late Join To Spawn With Gun
 -Fix Timer Carry 0 Timer to Next Map
 -Fix Team Winner Counting
 -Remove HLTV from Counting
