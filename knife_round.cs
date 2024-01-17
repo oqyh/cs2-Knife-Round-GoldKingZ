@@ -7,6 +7,7 @@ using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using System.Text;
 using System.Diagnostics;
+using Microsoft.Extensions.Localization;
 
 namespace Knife_Round;
 
@@ -16,16 +17,18 @@ public class KnifeRoundConfig : BasePluginConfig
     [JsonPropertyName("BlockTeamChangeOnVoteAndKnife")] public bool BlockTeamChangeOnVoteAndKnife { get; set; } = true;
     [JsonPropertyName("AllowAllTalkOnKnifeRound")] public bool AllowAllTalkOnKnifeRound { get; set; } = true;
     [JsonPropertyName("KnifeRoundTimer")] public float KnifeRoundTimer { get; set; } = 1;
-    [JsonPropertyName("VoteTimer")] public float VoteTimer { get; set; } = 50; 
+    [JsonPropertyName("VoteTimer")] public float VoteTimer { get; set; } = 50;
+    [JsonPropertyName("MessageKnifeStartTimer")] public float MessageKnifeStartTimer { get; set; } = 25; 
 }
 
 public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig> 
 {
     public override string ModuleName => "Knife Round";
-    public override string ModuleVersion => "1.0.0";
+    public override string ModuleVersion => "1.0.1";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "Creates An Additional Round With Knifes After Warmup";
     public KnifeRoundConfig Config { get; set; } = new KnifeRoundConfig();
+    internal static IStringLocalizer? Stringlocalizer;
     private Stopwatch stopwatch = new Stopwatch();
     public float mp_roundtime;
     public float mp_roundtime_defuse;
@@ -50,6 +53,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
     public void OnConfigParsed(KnifeRoundConfig config)
     {
         Config = config;
+        Stringlocalizer = Localizer;
     }
     public override void Load(bool hotReload)
     {
@@ -76,6 +80,25 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                 var playerEntities = Utilities.FindAllEntitiesByDesignerName<CCSPlayerController>("cs_player_controller");
                 var countct = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.CounterTerrorist);
                 var countt = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.Terrorist);
+                string Close = "</font>";
+                string Red = "<font color='Red'>";
+                string Cyan = "<font color='cyan'>";
+                string Blue = "<font color='blue'>";
+                string DarkBlue = "<font color='darkblue'>";
+                string LightBlue = "<font color='lightblue'>";
+                string Purple = "<font color='purple'>";
+                string Yellow = "<font color='yellow'>";
+                string Lime = "<font color='lime'>";
+                string Magenta = "<font color='magenta'>";
+                string Pink = "<font color='pink'>";
+                string Grey = "<font color='grey'>";
+                string Green = "<font color='green'>";
+                string Orange = "<font color='orange'>";
+                string NextLine = "<br>";
+                string CTIMAGE = "<img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196733677636440167/Ct-patch-small-ezgif.com-resize.png' class=''>";
+                string TIMAGE = "<img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196733591003070495/Icon-t-patch-small-ezgif.com-resize.png' class=''>";
+                string KnifeLeft = "<img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196733591003070495/Icon-t-patch-small-ezgif.com-resize.png' class=''>";
+                string KnifeRight = "<img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196733591003070495/Icon-t-patch-small-ezgif.com-resize.png' class=''>";
                 if (timer > 0)
                 {
                     if (stopwatch.ElapsedMilliseconds >= 1000)
@@ -93,25 +116,17 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                         if(player.TeamNum == 3)
                         {
                             StringBuilder builder = new StringBuilder();
-                            builder.AppendFormat("<font color='green'>Waitng For</font> <font color='red'>T's</font> <font color='green'>To Vote</font>");
+                            var required = (int)Math.Ceiling(countt * 0.6);
+
+                            builder.AppendFormat(Localizer["When_CT_Lose"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine,CTIMAGE, TIMAGE, currentVotesCT, currentVotesT, required,timer, KnifeLeft, KnifeRight);
                             var centerhtml = builder.ToString();
                             player?.PrintToCenterHtml(centerhtml);
                         }else if(player.TeamNum == 2)
                         {
                             StringBuilder builder = new StringBuilder();
-                            var required = (int)Math.Ceiling(countct * 0.6);
-                            builder.AppendFormat("<font color='green'>Vote Which Side To Pick</font>");
-                            builder.AppendLine("<br>");
-                            builder.AppendFormat("<font color='red'>== Timer Left To Vote: {0} Secs =</font>", timer);
-                            builder.AppendLine("<br>");
-                            builder.AppendFormat("<font color='yellow'>!ct</font> <font color='grey'>To Go CT Side Team</font> ");
-                            builder.AppendLine("<br>");
-                            builder.AppendFormat("<font color='yellow'>!t</font> <font color='grey'>To Go T Side Team</font>");
-                            builder.AppendLine("<br>");
-                            builder.AppendFormat("<font color='grey'>Votes On</font> <img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196733677636440167/Ct-patch-small-ezgif.com-resize.png' class=''> <font color='green'>[{0}</font> <font color='grey'>/</font> <font color='green'>{1}]</font>", currentVotesCT, required);
-                            builder.AppendLine("<br>");
-                            builder.AppendLine("<br>");
-                            builder.AppendFormat("<font color='grey'>Votes On</font> <img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196733591003070495/Icon-t-patch-small-ezgif.com-resize.png' class=''> <font color='green'>[{0}</font> <font color='grey'>/</font> <font color='green'>{1}]</font>", currentVotesT, required);
+                            var required = (int)Math.Ceiling(countt * 0.6);
+
+                            builder.AppendFormat(Localizer["Winner_Message"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine,CTIMAGE, TIMAGE, currentVotesCT, currentVotesT, required,timer);
                             var centerhtml = builder.ToString();
                             player?.PrintToCenterHtml(centerhtml);
                         }
@@ -121,25 +136,17 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                         {
                             StringBuilder builder = new StringBuilder();
                             var required = (int)Math.Ceiling(countct * 0.6);
-                            builder.AppendFormat("<font color='green'>Vote Which Side To Pick</font>");
-                            builder.AppendLine("<br>");
-                            builder.AppendFormat("<font color='red'>== Timer Left To Vote: {0} Secs =</font>", timer);
-                            builder.AppendLine("<br>");
-                            builder.AppendFormat("<font color='yellow'>!ct</font> <font color='grey'>To Go CT Side Team</font> ");
-                            builder.AppendLine("<br>");
-                            builder.AppendFormat("<font color='yellow'>!t</font> <font color='grey'>To Go T Side Team</font>");
-                            builder.AppendLine("<br>");
-                            builder.AppendFormat("<font color='grey'>Votes On</font> <img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196733677636440167/Ct-patch-small-ezgif.com-resize.png' class=''> <font color='green'>[{0}</font> <font color='grey'>/</font> <font color='green'>{1}]</font>", currentVotesCT, required);
-                            builder.AppendLine("<br>");
-                            builder.AppendLine("<br>");
-                            builder.AppendFormat("<font color='grey'>Votes On</font> <img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196733591003070495/Icon-t-patch-small-ezgif.com-resize.png' class=''> <font color='green'>[{0}</font> <font color='grey'>/</font> <font color='green'>{1}]</font>", currentVotesT, required);
+
+                            builder.AppendFormat(Localizer["Winner_Message"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine,CTIMAGE, TIMAGE, currentVotesCT, currentVotesT, required,timer);
                             var centerhtml = builder.ToString();
                             player?.PrintToCenterHtml(centerhtml);
                             
                         }else if(player.TeamNum == 2)
                         {
                             StringBuilder builder = new StringBuilder();
-                            builder.AppendFormat("<font color='green'>Waitng For</font> <font color='blue'>CT's</font> <font color='green'>To Vote</font>");
+                            var required = (int)Math.Ceiling(countct * 0.6);
+
+                            builder.AppendFormat(Localizer["When_T_Lose"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine,CTIMAGE, TIMAGE, currentVotesCT, currentVotesT, required,timer);
                             var centerhtml = builder.ToString();
                             player?.PrintToCenterHtml(centerhtml);
                         }
@@ -307,24 +314,71 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                             });
                         });
                     }
-                    
+                    if (TWINNER && currentVotesT == currentVotesCT || CTWINNER && currentVotesT == currentVotesCT)
+                    {
+                        Server.NextFrame(() =>
+                        {
+                            _rtvCountT.Clear();
+                            _rtvCountCT.Clear();
+                            TWINNER = false;
+                            CTWINNER = false;
+                            BlockTeam = false;
+                            AddTimer(2.0f, () =>
+                            {
+                                Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                if(Config.AllowAllTalkOnKnifeRound)
+                                {
+                                    Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
+                                }
+                            });
+                            AddTimer(4.0f, () =>
+                            {
+                                Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                if(Config.AllowAllTalkOnKnifeRound)
+                                {
+                                    Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
+                                }
+                            });
+                            AddTimer(6.0f, () =>
+                            {
+                                Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                if(Config.AllowAllTalkOnKnifeRound)
+                                {
+                                    Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
+                                }
+                            });
+                        });
+                    }
                 }
             }
         }else if(knifestarted == true)
             {
                 var playerEntities = Utilities.FindAllEntitiesByDesignerName<CCSPlayerController>("cs_player_controller");
                 
+                string Close = "</font>";
+                string Red = "<font color='Red'>";
+                string Cyan = "<font color='cyan'>";
+                string Blue = "<font color='blue'>";
+                string DarkBlue = "<font color='darkblue'>";
+                string LightBlue = "<font color='lightblue'>";
+                string Purple = "<font color='purple'>";
+                string Yellow = "<font color='yellow'>";
+                string Lime = "<font color='lime'>";
+                string Magenta = "<font color='magenta'>";
+                string Pink = "<font color='pink'>";
+                string Grey = "<font color='grey'>";
+                string Green = "<font color='green'>";
+                string Orange = "<font color='orange'>";
+                string NextLine = "<br>";
+                string CTIMAGE = "<img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196733677636440167/Ct-patch-small-ezgif.com-resize.png' class=''>";
+                string TIMAGE = "<img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196733591003070495/Icon-t-patch-small-ezgif.com-resize.png' class=''>";
+                string KnifeLeft = "<img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196804184209633322/knife-ezgif.com-reverse.png' class=''>";
+                string KnifeRight = "<img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196804174441103440/knife-ezgif.com-resize.png' class=''>";
 
                 foreach (var player in playerEntities)
                 {
-                    
-
                     StringBuilder builder = new StringBuilder();
-                    builder.AppendFormat("<img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196804184209633322/knife-ezgif.com-reverse.png' class=''> <font color='orange'> Knife Round </font> <img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196804174441103440/knife-ezgif.com-resize.png' class=''>");
-                    builder.AppendLine("<br>");
-                    builder.AppendLine("<br>");
-                    builder.AppendLine("<br>");
-                    builder.AppendFormat("<font color='purple'>Winner Will Choose Team Side</font>");
+                    builder.AppendFormat(Localizer["Knife_Start_Message"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine,CTIMAGE, TIMAGE, string.Empty, string.Empty, string.Empty,string.Empty, KnifeLeft, KnifeRight);
                     var centerhtml = builder.ToString();
                     player?.PrintToCenterHtml(centerhtml);
                 }
@@ -353,7 +407,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
         {
             BlockTeam = true;
             knifestarted = true;
-            AddTimer(10.0f, () =>
+            AddTimer(Config.MessageKnifeStartTimer, () =>
             {
                 knifestarted = false;
             });
@@ -394,11 +448,14 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                 {
                     Server.ExecuteCommand($"sv_alltalk true; sv_deadtalk true; sv_full_alltalk true; sv_talk_enemy_dead true; sv_talk_enemy_living true;");
                 }
-                foreach (var p in Utilities.GetPlayers().Where(p => p is { IsValid: true, PawnIsAlive: true }))
+                AddTimer(1.0f, () =>
                 {
-                    p.RemoveWeapons();
-                    p.GiveNamedItem("weapon_knife");
-                }
+                    foreach (var p in Utilities.GetPlayers().Where(p => p is { IsValid: true, PawnIsAlive: true }))
+                    {
+                        p.RemoveWeapons();
+                        p.GiveNamedItem("weapon_knife");
+                    }
+                });
             });
         }
         return HookResult.Continue;
