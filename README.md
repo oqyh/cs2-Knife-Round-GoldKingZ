@@ -1,4 +1,4 @@
-# [CS2] Knife-Round (1.0.2)
+# [CS2] Knife-Round (1.0.3)
 
 ### Creates An Additional Round With Knifes After Warmup
 
@@ -81,6 +81,10 @@
 
 ## .:[ Change Log ]:.
 ```
+(1.0.3)
+-Fix Some Bugs
+-Fix Exploit Reconnect Spawn With Gun
+
 (1.0.2)
 -Fix Some Bugs
 -Fix Exploit Droping Gun Before Round Start
