@@ -24,7 +24,7 @@ public class KnifeRoundConfig : BasePluginConfig
 public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig> 
 {
     public override string ModuleName => "Knife Round";
-    public override string ModuleVersion => "1.0.2";
+    public override string ModuleVersion => "1.0.3";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "Creates An Additional Round With Knifes After Warmup";
     public KnifeRoundConfig Config { get; set; } = new KnifeRoundConfig();
@@ -58,8 +58,8 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
     }
     public override void Load(bool hotReload)
     {
-        RegisterListener<Listeners.OnTick>(OnTick);
         AddCommandListener("jointeam", OnCommandJoinTeam, HookMode.Pre);
+        RegisterListener<Listeners.OnTick>(OnTick);
         RegisterListener<Listeners.OnMapEnd>(OnMapEnd);
     }
     private HookResult OnCommandJoinTeam(CCSPlayerController? player, CommandInfo commandInfo)
@@ -67,6 +67,25 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
         if (Config.BlockTeamChangeOnVoteAndKnife && BlockTeam)
         {
             return HookResult.Handled;
+        }
+        return HookResult.Continue;
+    }
+    
+    [GameEventHandler]
+    public HookResult EventPlayerTeam(EventPlayerTeam @event, GameEventInfo info)
+    {
+        if (Config.BlockTeamChangeOnVoteAndKnife && BlockTeam)
+        {
+            var player = @event.Userid;
+            if (player == null || !player.IsValid || player.PlayerPawn == null || !player.PlayerPawn.IsValid || player.PlayerPawn.Value == null || !player.PlayerPawn.Value.IsValid)return HookResult.Continue;
+            Server.NextFrame(() =>
+            {
+                AddTimer(0.1f, () =>
+                {
+                    player.RemoveWeapons();
+                    player.GiveNamedItem("weapon_knife");
+                });
+            });
         }
         return HookResult.Continue;
     }
@@ -527,7 +546,6 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
         {
             targetPlayerName = player.PlayerName;
             if(!player.UserId.HasValue || string.IsNullOrEmpty(targetPlayerName))return;
-            int voterUserId = player.UserId.Value;
             
             
             if (_rtvCountT.Contains(player!.SteamID))
@@ -594,7 +612,6 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
         {
             targetPlayerName = player.PlayerName;
             if(!player.UserId.HasValue || string.IsNullOrEmpty(targetPlayerName))return;
-            int voterUserId = player.UserId.Value;
 
             if (_rtvCountT.Contains(player!.SteamID))
             {
@@ -660,7 +677,6 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
         {
             targetPlayerName = player.PlayerName;
             if(!player.UserId.HasValue || string.IsNullOrEmpty(targetPlayerName))return;
-            int voterUserId = player.UserId.Value;
             
             
             if (_rtvCountCT.Contains(player!.SteamID))
@@ -727,7 +743,6 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
         {
             targetPlayerName = player.PlayerName;
             if(!player.UserId.HasValue || string.IsNullOrEmpty(targetPlayerName))return;
-            int voterUserId = player.UserId.Value;
            
             if (_rtvCountCT.Contains(player!.SteamID))
             {
