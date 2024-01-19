@@ -36,7 +36,7 @@
   //Message On Knife Round Start ("Knife_Start_Message") (In Secs)
   "MessageKnifeStartTimer": 25,
   
-  //After Winner Pick Team How Many Restart Whould You Like
+  //After Winner Pick Team How Many Restart Would You Like
   "AfterWinningRestartXTimes": 3,
   
 //-----------------------------------------------------------------------------------------
