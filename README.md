@@ -1,4 +1,4 @@
-# [CS2] Knife-Round (1.0.3)
+# [CS2] Knife-Round (1.0.4)
 
 ### Creates An Additional Round With Knifes After Warmup
 
@@ -21,7 +21,7 @@
   //Freeze Players On Voting
   "FreezeOnVote": true,
   
-  //Block Team Changing (To Avoid PickGun)
+  //Block Team Changing (To Avoid Loser Switch To Winner Team And Vote)
   "BlockTeamChangeOnVoteAndKnife": true,
   
   //Allow All Players To Hear Each Other On Knife Round Only
@@ -35,6 +35,10 @@
   
   //Message On Knife Round Start ("Knife_Start_Message") (In Secs)
   "MessageKnifeStartTimer": 25,
+  
+  //After Winner Pick Team How Many Restart Whould You Like
+  "AfterWinningRestartXTimes": 3,
+  
 //-----------------------------------------------------------------------------------------
   "ConfigVersion": 1
 }
@@ -81,6 +85,11 @@
 
 ## .:[ Change Log ]:.
 ```
+(1.0.4)
+-Fix Some Bugs
+-Rework Knife Round For Better
+-Added "AfterWinningRestartXTimes"
+
 (1.0.3)
 -Fix Some Bugs
 -Fix Exploit Reconnect Spawn With Gun
