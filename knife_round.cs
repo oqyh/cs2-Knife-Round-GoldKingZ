@@ -8,6 +8,7 @@ using CounterStrikeSharp.API.Core.Attributes.Registration;
 using System.Text;
 using System.Diagnostics;
 using Microsoft.Extensions.Localization;
+using CounterStrikeSharp.API.Modules.Timers;
 
 namespace Knife_Round;
 
@@ -18,13 +19,14 @@ public class KnifeRoundConfig : BasePluginConfig
     [JsonPropertyName("AllowAllTalkOnKnifeRound")] public bool AllowAllTalkOnKnifeRound { get; set; } = true;
     [JsonPropertyName("KnifeRoundTimer")] public float KnifeRoundTimer { get; set; } = 1;
     [JsonPropertyName("VoteTimer")] public float VoteTimer { get; set; } = 50;
-    [JsonPropertyName("MessageKnifeStartTimer")] public float MessageKnifeStartTimer { get; set; } = 25; 
+    [JsonPropertyName("MessageKnifeStartTimer")] public float MessageKnifeStartTimer { get; set; } = 25;
+    [JsonPropertyName("AfterWinningRestartXTimes")] public int AfterWinningRestartXTimes { get; set; } = 3; 
 }
 
 public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig> 
 {
     public override string ModuleName => "Knife Round";
-    public override string ModuleVersion => "1.0.3";
+    public override string ModuleVersion => "1.0.4";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "Creates An Additional Round With Knifes After Warmup";
     public KnifeRoundConfig Config { get; set; } = new KnifeRoundConfig();
@@ -32,7 +34,6 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
     private Stopwatch stopwatch = new Stopwatch();
     public float mp_roundtime;
     public float mp_roundtime_defuse;
-    public float mp_force_pick_time;
     public int mp_freezetime;
     public bool sv_alltalk;
     public bool sv_deadtalk;
@@ -51,17 +52,20 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
     public string targetPlayerName = "";
     private List<ulong> _rtvCountCT = new();
     private List<ulong> _rtvCountT = new();
+    
     public void OnConfigParsed(KnifeRoundConfig config)
     {
         Config = config;
         Stringlocalizer = Localizer;
     }
+
     public override void Load(bool hotReload)
     {
         AddCommandListener("jointeam", OnCommandJoinTeam, HookMode.Pre);
         RegisterListener<Listeners.OnTick>(OnTick);
         RegisterListener<Listeners.OnMapEnd>(OnMapEnd);
     }
+
     private HookResult OnCommandJoinTeam(CCSPlayerController? player, CommandInfo commandInfo)
     {
         if (Config.BlockTeamChangeOnVoteAndKnife && BlockTeam)
@@ -70,25 +74,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
         }
         return HookResult.Continue;
     }
-    
-    [GameEventHandler]
-    public HookResult EventPlayerTeam(EventPlayerTeam @event, GameEventInfo info)
-    {
-        if (Config.BlockTeamChangeOnVoteAndKnife && BlockTeam)
-        {
-            var player = @event.Userid;
-            if (player == null || !player.IsValid || player.PlayerPawn == null || !player.PlayerPawn.IsValid || player.PlayerPawn.Value == null || !player.PlayerPawn.Value.IsValid)return HookResult.Continue;
-            Server.NextFrame(() =>
-            {
-                AddTimer(0.1f, () =>
-                {
-                    player.RemoveWeapons();
-                    player.GiveNamedItem("weapon_knife");
-                });
-            });
-        }
-        return HookResult.Continue;
-    }
+
     public void OnTick()
     {
         if(!knifemode)
@@ -192,28 +178,21 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                             TWINNER = false;
                             CTWINNER = false;
                             BlockTeam = false;
-                            AddTimer(2.0f, () =>
+                            int x = Config.AfterWinningRestartXTimes;
+                            for (int i = 1; i <= x; i++)
                             {
-                                Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                                if(Config.AllowAllTalkOnKnifeRound)
+                                float interval = i * 2.0f;
+
+                                AddTimer(interval, () =>
                                 {
-                                    Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                                }
-                            });
-                            AddTimer(4.0f, () =>
-                            {
-                                Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                                {
-                                    Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                                }
-                            });
-                            AddTimer(6.0f, () =>
-                            {
-                                Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                                {
-                                    Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                                }
-                            });
+                                    Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                    
+                                    if (Config.AllowAllTalkOnKnifeRound)
+                                    {
+                                        Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
+                                    }
+                                }, TimerFlags.STOP_ON_MAPCHANGE);
+                            }
                         });
                     }
                     if (CTWINNER && currentVotesCT > currentVotesT)
@@ -225,30 +204,21 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                             TWINNER = false;
                             CTWINNER = false;
                             BlockTeam = false;
-                            AddTimer(2.0f, () =>
+                            int x = Config.AfterWinningRestartXTimes;
+                            for (int i = 1; i <= x; i++)
                             {
-                                Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                                if(Config.AllowAllTalkOnKnifeRound)
+                                float interval = i * 2.0f;
+
+                                AddTimer(interval, () =>
                                 {
-                                    Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                                }
-                            });
-                            AddTimer(4.0f, () =>
-                            {
-                                Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                                if(Config.AllowAllTalkOnKnifeRound)
-                                {
-                                    Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                                }
-                            });
-                            AddTimer(6.0f, () =>
-                            {
-                                Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                                if(Config.AllowAllTalkOnKnifeRound)
-                                {
-                                    Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                                }
-                            });
+                                    Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                    
+                                    if (Config.AllowAllTalkOnKnifeRound)
+                                    {
+                                        Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
+                                    }
+                                }, TimerFlags.STOP_ON_MAPCHANGE);
+                            }
                         });
                     }
                     if (CTWINNER && currentVotesT > currentVotesCT)
@@ -271,30 +241,21 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                             TWINNER = false;
                             CTWINNER = false;
                             BlockTeam = false;
-                            AddTimer(2.0f, () =>
+                            int x = Config.AfterWinningRestartXTimes;
+                            for (int i = 1; i <= x; i++)
                             {
-                                Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                                if(Config.AllowAllTalkOnKnifeRound)
+                                float interval = i * 2.0f;
+
+                                AddTimer(interval, () =>
                                 {
-                                    Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                                }
-                            });
-                            AddTimer(4.0f, () =>
-                            {
-                                Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                                if(Config.AllowAllTalkOnKnifeRound)
-                                {
-                                    Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                                }
-                            });
-                            AddTimer(6.0f, () =>
-                            {
-                                Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                                if(Config.AllowAllTalkOnKnifeRound)
-                                {
-                                    Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                                }
-                            });
+                                    Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                    
+                                    if (Config.AllowAllTalkOnKnifeRound)
+                                    {
+                                        Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
+                                    }
+                                }, TimerFlags.STOP_ON_MAPCHANGE);
+                            }
                         });
                     }
                     if (TWINNER && currentVotesT > currentVotesCT)
@@ -306,30 +267,21 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                             TWINNER = false;
                             CTWINNER = false;
                             BlockTeam = false;
-                            AddTimer(2.0f, () =>
+                            int x = Config.AfterWinningRestartXTimes;
+                            for (int i = 1; i <= x; i++)
                             {
-                                Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                                if(Config.AllowAllTalkOnKnifeRound)
+                                float interval = i * 2.0f;
+
+                                AddTimer(interval, () =>
                                 {
-                                    Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                                }
-                            });
-                            AddTimer(4.0f, () =>
-                            {
-                                Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                                if(Config.AllowAllTalkOnKnifeRound)
-                                {
-                                    Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                                }
-                            });
-                            AddTimer(6.0f, () =>
-                            {
-                                Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                                if(Config.AllowAllTalkOnKnifeRound)
-                                {
-                                    Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                                }
-                            });
+                                    Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                    
+                                    if (Config.AllowAllTalkOnKnifeRound)
+                                    {
+                                        Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
+                                    }
+                                }, TimerFlags.STOP_ON_MAPCHANGE);
+                            }
                         });
                     }
                     if (TWINNER && currentVotesT == currentVotesCT || CTWINNER && currentVotesT == currentVotesCT)
@@ -341,30 +293,21 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                             TWINNER = false;
                             CTWINNER = false;
                             BlockTeam = false;
-                            AddTimer(2.0f, () =>
+                            int x = Config.AfterWinningRestartXTimes;
+                            for (int i = 1; i <= x; i++)
                             {
-                                Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                                if(Config.AllowAllTalkOnKnifeRound)
+                                float interval = i * 2.0f;
+
+                                AddTimer(interval, () =>
                                 {
-                                    Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                                }
-                            });
-                            AddTimer(4.0f, () =>
-                            {
-                                Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                                if(Config.AllowAllTalkOnKnifeRound)
-                                {
-                                    Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                                }
-                            });
-                            AddTimer(6.0f, () =>
-                            {
-                                Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                                if(Config.AllowAllTalkOnKnifeRound)
-                                {
-                                    Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                                }
-                            });
+                                    Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                    
+                                    if (Config.AllowAllTalkOnKnifeRound)
+                                    {
+                                        Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
+                                    }
+                                }, TimerFlags.STOP_ON_MAPCHANGE);
+                            }
                         });
                     }
                 }
@@ -402,14 +345,26 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                 }
             }
     }
+
     [GameEventHandler]
-    public HookResult OnRoundPreStart(EventRoundPrestart @event, GameEventInfo info)
+    public HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
     {
-        if(!onroundstart)
+        if (@event == null) return HookResult.Continue;
+        if(onroundstart)
+        {
+            if(knifemode)
+            {
+                BlockTeam = true;
+                knifestarted = true;
+                AddTimer(Config.MessageKnifeStartTimer, () =>
+                {
+                    knifestarted = false;
+                }, TimerFlags.STOP_ON_MAPCHANGE);
+            }
+        }else if(!onroundstart)
         {
             mp_roundtime = ConVar.Find("mp_roundtime")!.GetPrimitiveValue<float>();
             mp_roundtime_defuse = ConVar.Find("mp_roundtime_defuse")!.GetPrimitiveValue<float>();
-            mp_force_pick_time = ConVar.Find("mp_force_pick_time")!.GetPrimitiveValue<float>();
             mp_freezetime = ConVar.Find("mp_freezetime")!.GetPrimitiveValue<int>();
             sv_alltalk = ConVar.Find("sv_alltalk")!.GetPrimitiveValue<bool>();
             sv_full_alltalk = ConVar.Find("sv_full_alltalk")!.GetPrimitiveValue<bool>();
@@ -419,45 +374,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
             knifemode = true;
             onroundstart = true;
-            return HookResult.Handled;
         }
-        
-        if(knifemode)
-        {
-            BlockTeam = true;
-            knifestarted = true;
-            AddTimer(Config.MessageKnifeStartTimer, () =>
-            {
-                knifestarted = false;
-            });
-        }else if(!knifemode)
-        {
-            Server.NextFrame(() =>
-            {
-                if(TWINNER == true || CTWINNER == true)
-                {
-                    if(Config.FreezeOnVote)
-                    {
-                        foreach (var p in Utilities.GetPlayers().FindAll(p => p is { IsValid: true, PawnIsAlive: true }))
-                        {
-                            if(p.PlayerPawn.Value != null && p.PlayerPawn.Value.IsValid){p.PlayerPawn.Value.MoveType = MoveType_t.MOVETYPE_NONE;}
-                        }
-                    }else
-                    {
-                        foreach (var p in Utilities.GetPlayers().FindAll(p => p is { IsValid: true, PawnIsAlive: true }))
-                        {
-                            if(p.PlayerPawn.Value != null && p.PlayerPawn.Value.IsValid){p.PlayerPawn.Value.MoveType = MoveType_t.MOVETYPE_WALK;}
-                        }
-                    }
-                }
-            });
-        }
-        return HookResult.Continue;
-    }
-
-    [GameEventHandler]
-    public HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
-    {
         if(knifemode)
         {
             Server.NextFrame(() =>
@@ -467,16 +384,58 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                 {
                     Server.ExecuteCommand($"sv_alltalk true; sv_deadtalk true; sv_full_alltalk true; sv_talk_enemy_dead true; sv_talk_enemy_living true;");
                 }
-                AddTimer(0.1f, () =>
-                {
-                    foreach (var p in Utilities.GetPlayers().Where(p => p is { IsValid: true, PawnIsAlive: true }))
-                    {
-                        p.RemoveWeapons();
-                        p.GiveNamedItem("weapon_knife");
-                    }
-                });
             });
         }
+
+        return HookResult.Continue;
+    }
+
+    [GameEventHandler]
+    public HookResult EventRoundPrestart(EventRoundPrestart @event, GameEventInfo info)
+    {
+        if(onroundstart && knifemode)
+        {
+            BlockTeam = true; 
+        }
+        return HookResult.Continue;
+    }
+
+    [GameEventHandler]
+    public HookResult EventPlayerSpawn(EventPlayerSpawn @event, GameEventInfo info)
+    {
+        if (@event == null) return HookResult.Continue;
+        var player = @event.Userid;
+        if (player == null || !player.IsValid || player.PlayerPawn == null || !player.PlayerPawn.IsValid || player.PlayerPawn.Value == null || !player.PlayerPawn.Value.IsValid)return HookResult.Continue;
+        if(knifemode && BlockTeam)
+        {
+            Server.NextFrame(() =>
+            {
+                AddTimer(0.1f, () =>
+                {
+                    player.RemoveWeapons();
+                    player.GiveNamedItem("weapon_knife");
+                }, TimerFlags.STOP_ON_MAPCHANGE);
+            });
+        }else if(!knifemode)
+        {
+            if(TWINNER == true || CTWINNER == true)
+            {
+                Server.NextFrame(() =>
+                {
+                    
+                    if(Config.FreezeOnVote)
+                    {
+                        
+                        if(player.PlayerPawn.Value != null && player.PlayerPawn.Value.IsValid){player.PlayerPawn.Value.MoveType = MoveType_t.MOVETYPE_NONE;}
+                        
+                    }else
+                    {
+                        if(player.PlayerPawn.Value != null && player.PlayerPawn.Value.IsValid){player.PlayerPawn.Value.MoveType = MoveType_t.MOVETYPE_WALK;}
+                    }
+                    
+                });
+            }
+        }   
         return HookResult.Continue;
     }
 
@@ -484,7 +443,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
     public HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
     {
         if (@event == null || !knifemode) return HookResult.Continue;
-
+        
         var playerEntities = Utilities.FindAllEntitiesByDesignerName<CCSPlayerController>("cs_player_controller");
         
         stopwatch.Start();
@@ -582,30 +541,21 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                     TWINNER = false;
                     CTWINNER = false;
                     BlockTeam = false;
-                    AddTimer(2.0f, () =>
+                    int x = Config.AfterWinningRestartXTimes;
+                    for (int i = 1; i <= x; i++)
                     {
-                        Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                        if(Config.AllowAllTalkOnKnifeRound)
+                        float interval = i * 2.0f;
+
+                        AddTimer(interval, () =>
                         {
-                            Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                        }
-                    });
-                    AddTimer(4.0f, () =>
-                    {
-                        Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                        if(Config.AllowAllTalkOnKnifeRound)
-                        {
-                            Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                        }
-                    });
-                    AddTimer(6.0f, () =>
-                    {
-                        Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                        if(Config.AllowAllTalkOnKnifeRound)
-                        {
-                            Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                        }
-                    });
+                            Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                            
+                            if (Config.AllowAllTalkOnKnifeRound)
+                            {
+                                Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
+                            }
+                        }, TimerFlags.STOP_ON_MAPCHANGE);
+                    }
                 });
             }
         }else if(CTWINNER && player.TeamNum == 3)
@@ -634,38 +584,26 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                     TWINNER = false;
                     CTWINNER = false;
                     BlockTeam = false;
-                    AddTimer(2.0f, () =>
+                    int x = Config.AfterWinningRestartXTimes;
+                    for (int i = 1; i <= x; i++)
                     {
-                        Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                        if(Config.AllowAllTalkOnKnifeRound)
+                        float interval = i * 2.0f;
+
+                        AddTimer(interval, () =>
                         {
-                            Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                        }
-                    });
-                    AddTimer(4.0f, () =>
-                    {
-                        Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                        if(Config.AllowAllTalkOnKnifeRound)
-                        {
-                            Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                        }
-                    });
-                    AddTimer(6.0f, () =>
-                    {
-                        Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                        if(Config.AllowAllTalkOnKnifeRound)
-                        {
-                            Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                        }
-                    });
+                            Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                            
+                            if (Config.AllowAllTalkOnKnifeRound)
+                            {
+                                Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
+                            }
+                        }, TimerFlags.STOP_ON_MAPCHANGE);
+                    }
                 });
             }
         }
         
     }
-
-
-
 
     [ConsoleCommand("css_t", "change to t")]
     [CommandHelper(whoCanExecute:CommandUsage.CLIENT_ONLY)]
@@ -712,30 +650,21 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                     TWINNER = false;
                     CTWINNER = false;
                     BlockTeam = false;
-                    AddTimer(2.0f, () =>
+                    int x = Config.AfterWinningRestartXTimes;
+                    for (int i = 1; i <= x; i++)
                     {
-                        Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                        if(Config.AllowAllTalkOnKnifeRound)
+                        float interval = i * 2.0f;
+
+                        AddTimer(interval, () =>
                         {
-                            Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                        }
-                    });
-                    AddTimer(4.0f, () =>
-                    {
-                        Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                        if(Config.AllowAllTalkOnKnifeRound)
-                        {
-                            Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                        }
-                    });
-                    AddTimer(6.0f, () =>
-                    {
-                        Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                        if(Config.AllowAllTalkOnKnifeRound)
-                        {
-                            Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                        }
-                    });
+                            Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                            
+                            if (Config.AllowAllTalkOnKnifeRound)
+                            {
+                                Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
+                            }
+                        }, TimerFlags.STOP_ON_MAPCHANGE);
+                    }
                 });
             }
             
@@ -766,34 +695,26 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                     TWINNER = false;
                     CTWINNER = false;
                     BlockTeam = false;
-                    AddTimer(2.0f, () =>
+                    int x = Config.AfterWinningRestartXTimes;
+                    for (int i = 1; i <= x; i++)
                     {
-                        Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                        if(Config.AllowAllTalkOnKnifeRound)
+                        float interval = i * 2.0f;
+
+                        AddTimer(interval, () =>
                         {
-                            Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                        }
-                    });
-                    AddTimer(4.0f, () =>
-                    {
-                        Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                        if(Config.AllowAllTalkOnKnifeRound)
-                        {
-                            Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                        }
-                    });
-                    AddTimer(6.0f, () =>
-                    {
-                        Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1; mp_force_pick_time {mp_force_pick_time}");
-                        if(Config.AllowAllTalkOnKnifeRound)
-                        {
-                            Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
-                        }
-                    });
+                            Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                            
+                            if (Config.AllowAllTalkOnKnifeRound)
+                            {
+                                Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
+                            }
+                        }, TimerFlags.STOP_ON_MAPCHANGE);
+                    }
                 });
             }
         }
     }
+
     public override void Unload(bool hotReload)
     {
         _rtvCountT.Clear();
