@@ -379,7 +379,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
         {
             Server.NextFrame(() =>
             {
-                Server.ExecuteCommand($"sv_buy_status_override 3; mp_roundtime {Config.KnifeRoundTimer}; mp_roundtime_defuse {Config.KnifeRoundTimer}; mp_give_player_c4 0; mp_force_pick_time 999");
+                Server.ExecuteCommand($"sv_buy_status_override 3; mp_roundtime {Config.KnifeRoundTimer}; mp_roundtime_defuse {Config.KnifeRoundTimer}; mp_give_player_c4 0");
                 if(Config.AllowAllTalkOnKnifeRound)
                 {
                     Server.ExecuteCommand($"sv_alltalk true; sv_deadtalk true; sv_full_alltalk true; sv_talk_enemy_dead true; sv_talk_enemy_living true;");
