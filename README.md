@@ -12,7 +12,7 @@
 ## .:[ Dependencies ]:.
 [Metamod:Source (2.x)](https://www.sourcemm.net/downloads.php/?branch=master)
 
-[CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp/releases)
+[CounterStrikeSharp (152 And Above)](https://github.com/roflmuffin/CounterStrikeSharp/releases)
 
 
 ## .:[ Configuration ]:.
