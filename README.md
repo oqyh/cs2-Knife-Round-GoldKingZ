@@ -1,4 +1,4 @@
-# [CS2] Knife-Round (1.0.4)
+# [CS2] Knife-Round (1.0.5)
 
 ### Creates An Additional Round With Knifes After Warmup
 
@@ -85,6 +85,11 @@
 
 ## .:[ Change Log ]:.
 ```
+(1.0.5)
+-Fix Some Bugs
+-Fix Windows Crash
+-Remove mp_force_pick_time
+
 (1.0.4)
 -Fix Some Bugs
 -Rework Knife Round For Better
