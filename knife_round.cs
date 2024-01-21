@@ -9,9 +9,11 @@ using System.Text;
 using System.Diagnostics;
 using Microsoft.Extensions.Localization;
 using CounterStrikeSharp.API.Modules.Timers;
+using CounterStrikeSharp.API.Core.Attributes;
 
 namespace Knife_Round;
 
+[MinimumApiVersion(152)]
 public class KnifeRoundConfig : BasePluginConfig
 {
     [JsonPropertyName("FreezeOnVote")] public bool FreezeOnVote { get; set; } = true;
@@ -26,7 +28,7 @@ public class KnifeRoundConfig : BasePluginConfig
 public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig> 
 {
     public override string ModuleName => "Knife Round";
-    public override string ModuleVersion => "1.0.4";
+    public override string ModuleVersion => "1.0.5";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "Creates An Additional Round With Knifes After Warmup";
     public KnifeRoundConfig Config { get; set; } = new KnifeRoundConfig();
