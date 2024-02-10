@@ -13,9 +13,10 @@ using CounterStrikeSharp.API.Core.Attributes;
 
 namespace Knife_Round;
 
-[MinimumApiVersion(152)]
+[MinimumApiVersion(164)]
 public class KnifeRoundConfig : BasePluginConfig
 {
+    [JsonPropertyName("GiveArmorOnKnifeRound")] public int GiveArmorOnKnifeRound { get; set; } = 2;
     [JsonPropertyName("FreezeOnVote")] public bool FreezeOnVote { get; set; } = true;
     [JsonPropertyName("BlockTeamChangeOnVoteAndKnife")] public bool BlockTeamChangeOnVoteAndKnife { get; set; } = true;
     [JsonPropertyName("AllowAllTalkOnKnifeRound")] public bool AllowAllTalkOnKnifeRound { get; set; } = true;
@@ -28,7 +29,7 @@ public class KnifeRoundConfig : BasePluginConfig
 public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig> 
 {
     public override string ModuleName => "Knife Round";
-    public override string ModuleVersion => "1.0.5";
+    public override string ModuleVersion => "1.0.6";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "Creates An Additional Round With Knifes After Warmup";
     public KnifeRoundConfig Config { get; set; } = new KnifeRoundConfig();
@@ -59,6 +60,16 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
     {
         Config = config;
         Stringlocalizer = Localizer;
+        if(Config.GiveArmorOnKnifeRound < 0 || Config.GiveArmorOnKnifeRound > 2)
+        {
+            config.GiveArmorOnKnifeRound = 2;
+            Console.WriteLine("|||||||||||||||||||||||||||||||||||| I N V A L I D ||||||||||||||||||||||||||||||||||||");
+            Console.WriteLine("GiveArmorOnKnifeRound: is invalid, setting to default value (2) Please Choose 0 or 1 or 2");
+            Console.WriteLine("GiveArmorOnKnifeRound (0) = No");
+            Console.WriteLine("GiveArmorOnKnifeRound (1) = Give Armor");
+            Console.WriteLine("GiveArmorOnKnifeRound (2) = Give Armor + Helmet");
+            Console.WriteLine("|||||||||||||||||||||||||||||||||||| I N V A L I D ||||||||||||||||||||||||||||||||||||");
+        }
     }
 
     public override void Load(bool hotReload)
@@ -416,6 +427,15 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                 {
                     player.RemoveWeapons();
                     player.GiveNamedItem("weapon_knife");
+
+                    if(Config.GiveArmorOnKnifeRound == 1)
+                    {
+                        player.GiveNamedItem("item_kevlar");
+                    }else if(Config.GiveArmorOnKnifeRound == 2)
+                    {
+                        player.GiveNamedItem("item_assaultsuit");
+                    } 
+                    
                 }, TimerFlags.STOP_ON_MAPCHANGE);
             });
         }else if(!knifemode)
@@ -430,9 +450,6 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                         
                         if(player.PlayerPawn.Value != null && player.PlayerPawn.Value.IsValid){player.PlayerPawn.Value.MoveType = MoveType_t.MOVETYPE_NONE;}
                         
-                    }else
-                    {
-                        if(player.PlayerPawn.Value != null && player.PlayerPawn.Value.IsValid){player.PlayerPawn.Value.MoveType = MoveType_t.MOVETYPE_WALK;}
                     }
                     
                 });
