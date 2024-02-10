@@ -1,4 +1,4 @@
-# [CS2] Knife-Round (1.0.5)
+# [CS2] Knife-Round (1.0.6)
 
 ### Creates An Additional Round With Knifes After Warmup
 
@@ -18,6 +18,12 @@
 ## .:[ Configuration ]:.
 ```json
 {
+  //Give Armor On Knife Round?
+  //(0) = No
+  //(1) = Give Armor
+  //(2) = Give Armor + Helmet
+  "GiveArmorOnKnifeRound": 2,
+  
   //Freeze Players On Voting
   "FreezeOnVote": true,
   
@@ -85,6 +91,11 @@
 
 ## .:[ Change Log ]:.
 ```
+(1.0.6)
+-Fix Some Bugs
+-Added GiveArmorOnKnifeRound
+
+
 (1.0.5)
 -Fix Some Bugs
 -Fix Windows Crash
