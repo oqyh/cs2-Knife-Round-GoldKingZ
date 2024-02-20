@@ -94,6 +94,7 @@
 (1.0.7)
 -Fix Some Bugs
 -Fix Remove Gloves
+-Fix Remove Knifes
 
 (1.0.6)
 -Fix Some Bugs
