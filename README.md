@@ -1,4 +1,4 @@
-# [CS2] Knife-Round (1.0.6)
+# [CS2] Knife-Round (1.0.7)
 
 ### Creates An Additional Round With Knifes After Warmup
 
@@ -91,10 +91,13 @@
 
 ## .:[ Change Log ]:.
 ```
+(1.0.7)
+-Fix Some Bugs
+-Fix Remove Gloves
+
 (1.0.6)
 -Fix Some Bugs
 -Added GiveArmorOnKnifeRound
-
 
 (1.0.5)
 -Fix Some Bugs
