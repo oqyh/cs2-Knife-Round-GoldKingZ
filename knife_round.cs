@@ -10,6 +10,7 @@ using System.Diagnostics;
 using Microsoft.Extensions.Localization;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Core.Attributes;
+using CounterStrikeSharp.API.Modules.Memory;
 
 namespace Knife_Round;
 
@@ -29,14 +30,21 @@ public class KnifeRoundConfig : BasePluginConfig
 public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig> 
 {
     public override string ModuleName => "Knife Round";
-    public override string ModuleVersion => "1.0.6";
+    public override string ModuleVersion => "1.0.7";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "Creates An Additional Round With Knifes After Warmup";
     public KnifeRoundConfig Config { get; set; } = new KnifeRoundConfig();
+
+    [SchemaMember("CPlayer_WeaponServices", "m_bAllowSwitchToNoWeapon")]
+	public ref bool ALLOWNOPICK => ref Schema.GetRef<bool>(this.Handle, "CPlayer_WeaponServices", "m_bAllowSwitchToNoWeapon");
+
+    public nint Handle { get; private set; }
+
     internal static IStringLocalizer? Stringlocalizer;
     private Stopwatch stopwatch = new Stopwatch();
     public float mp_roundtime;
     public float mp_roundtime_defuse;
+    public float mp_team_intro_time;
     public int mp_freezetime;
     public bool sv_alltalk;
     public bool sv_deadtalk;
@@ -198,7 +206,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
                                 AddTimer(interval, () =>
                                 {
-                                    Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                    Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
                                     
                                     if (Config.AllowAllTalkOnKnifeRound)
                                     {
@@ -224,7 +232,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
                                 AddTimer(interval, () =>
                                 {
-                                    Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                    Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
                                     
                                     if (Config.AllowAllTalkOnKnifeRound)
                                     {
@@ -261,7 +269,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
                                 AddTimer(interval, () =>
                                 {
-                                    Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                    Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
                                     
                                     if (Config.AllowAllTalkOnKnifeRound)
                                     {
@@ -287,7 +295,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
                                 AddTimer(interval, () =>
                                 {
-                                    Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                    Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
                                     
                                     if (Config.AllowAllTalkOnKnifeRound)
                                     {
@@ -313,7 +321,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
                                 AddTimer(interval, () =>
                                 {
-                                    Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                    Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
                                     
                                     if (Config.AllowAllTalkOnKnifeRound)
                                     {
@@ -378,6 +386,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
         {
             mp_roundtime = ConVar.Find("mp_roundtime")!.GetPrimitiveValue<float>();
             mp_roundtime_defuse = ConVar.Find("mp_roundtime_defuse")!.GetPrimitiveValue<float>();
+            mp_team_intro_time = ConVar.Find("mp_team_intro_time")!.GetPrimitiveValue<float>();
             mp_freezetime = ConVar.Find("mp_freezetime")!.GetPrimitiveValue<int>();
             sv_alltalk = ConVar.Find("sv_alltalk")!.GetPrimitiveValue<bool>();
             sv_full_alltalk = ConVar.Find("sv_full_alltalk")!.GetPrimitiveValue<bool>();
@@ -392,7 +401,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
         {
             Server.NextFrame(() =>
             {
-                Server.ExecuteCommand($"sv_buy_status_override 3; mp_roundtime {Config.KnifeRoundTimer}; mp_roundtime_defuse {Config.KnifeRoundTimer}; mp_give_player_c4 0");
+                Server.ExecuteCommand($"mp_team_intro_time 0.0; sv_buy_status_override 3; mp_roundtime {Config.KnifeRoundTimer}; mp_roundtime_defuse {Config.KnifeRoundTimer}; mp_give_player_c4 0");
                 if(Config.AllowAllTalkOnKnifeRound)
                 {
                     Server.ExecuteCommand($"sv_alltalk true; sv_deadtalk true; sv_full_alltalk true; sv_talk_enemy_dead true; sv_talk_enemy_living true;");
@@ -421,13 +430,21 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
         if (player == null || !player.IsValid || player.PlayerPawn == null || !player.PlayerPawn.IsValid || player.PlayerPawn.Value == null || !player.PlayerPawn.Value.IsValid)return HookResult.Continue;
         if(knifemode && BlockTeam)
         {
-            Server.NextFrame(() =>
+           Server.NextFrame(() =>
             {
                 AddTimer(0.1f, () =>
                 {
-                    player.RemoveWeapons();
-                    player.GiveNamedItem("weapon_knife");
+                    foreach (var weapon in player.PlayerPawn.Value.WeaponServices!.MyWeapons)
+                    {
+                        if (weapon is { IsValid: true, Value.IsValid: true } && !weapon.Value.DesignerName.Contains("weapon_knife"))
+                        {
 
+                            player.ExecuteClientCommand("slot3");
+                            player.DropActiveWeapon();
+                            weapon.Value.Remove();
+
+                        }
+                    }
                     if(Config.GiveArmorOnKnifeRound == 1)
                     {
                         player.GiveNamedItem("item_kevlar");
@@ -435,8 +452,8 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                     {
                         player.GiveNamedItem("item_assaultsuit");
                     } 
-                    
-                }, TimerFlags.STOP_ON_MAPCHANGE);
+                        
+                    }, TimerFlags.STOP_ON_MAPCHANGE);
             });
         }else if(!knifemode)
         {
@@ -567,7 +584,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
                         AddTimer(interval, () =>
                         {
-                            Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                            Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
                             
                             if (Config.AllowAllTalkOnKnifeRound)
                             {
@@ -610,7 +627,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
                         AddTimer(interval, () =>
                         {
-                            Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                            Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
                             
                             if (Config.AllowAllTalkOnKnifeRound)
                             {
@@ -676,7 +693,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
                         AddTimer(interval, () =>
                         {
-                            Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                            Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
                             
                             if (Config.AllowAllTalkOnKnifeRound)
                             {
@@ -721,7 +738,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
                         AddTimer(interval, () =>
                         {
-                            Server.ExecuteCommand($"sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                            Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
                             
                             if (Config.AllowAllTalkOnKnifeRound)
                             {
