@@ -10,7 +10,6 @@ using System.Diagnostics;
 using Microsoft.Extensions.Localization;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Modules.Memory;
 
 namespace Knife_Round;
 
@@ -34,11 +33,6 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "Creates An Additional Round With Knifes After Warmup";
     public KnifeRoundConfig Config { get; set; } = new KnifeRoundConfig();
-
-    [SchemaMember("CPlayer_WeaponServices", "m_bAllowSwitchToNoWeapon")]
-	public ref bool ALLOWNOPICK => ref Schema.GetRef<bool>(this.Handle, "CPlayer_WeaponServices", "m_bAllowSwitchToNoWeapon");
-
-    public nint Handle { get; private set; }
 
     internal static IStringLocalizer? Stringlocalizer;
     private Stopwatch stopwatch = new Stopwatch();
