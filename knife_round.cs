@@ -22,24 +22,26 @@ public class KnifeRoundConfig : BasePluginConfig
     [JsonPropertyName("AllowAllTalkOnKnifeRound")] public bool AllowAllTalkOnKnifeRound { get; set; } = true;
     [JsonPropertyName("KnifeRoundTimer")] public float KnifeRoundTimer { get; set; } = 1;
     [JsonPropertyName("VoteTimer")] public float VoteTimer { get; set; } = 50;
-    [JsonPropertyName("MessageKnifeStartTimer")] public float MessageKnifeStartTimer { get; set; } = 25;
+    [JsonPropertyName("MessageKnifeStartTimer")] public float MessageKnifeStartTimer { get; set; } = 15;
     [JsonPropertyName("AfterWinningRestartXTimes")] public int AfterWinningRestartXTimes { get; set; } = 3; 
 }
 
 public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig> 
 {
     public override string ModuleName => "Knife Round";
-    public override string ModuleVersion => "1.0.7";
+    public override string ModuleVersion => "1.0.8";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "Creates An Additional Round With Knifes After Warmup";
     public KnifeRoundConfig Config { get; set; } = new KnifeRoundConfig();
 
     internal static IStringLocalizer? Stringlocalizer;
     private Stopwatch stopwatch = new Stopwatch();
+    private Dictionary<ulong, bool> OnSpawn = new Dictionary<ulong, bool>();
     public float mp_roundtime;
+    public string mp_roundtimeFixed = "";
     public float mp_roundtime_defuse;
     public float mp_team_intro_time;
-    public int mp_freezetime;
+    public float test = 1.92f;
     public bool sv_alltalk;
     public bool sv_deadtalk;
     public bool sv_full_alltalk;
@@ -92,6 +94,30 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
     public void OnTick()
     {
+        if(knifemode && BlockTeam)
+        {
+            var playerEntitiess = Utilities.FindAllEntitiesByDesignerName<CCSPlayerController>("cs_player_controller");
+            foreach (var player in playerEntitiess)
+            {
+                if (player == null || !player.IsValid || player.PlayerPawn == null || !player.PlayerPawn.IsValid || player.PlayerPawn.Value == null || !player.PlayerPawn.Value.IsValid) continue;
+                var playerid = player.SteamID;
+
+                if (OnSpawn.ContainsKey(playerid))
+                {
+                    foreach (var weapon in player.PlayerPawn.Value.WeaponServices!.MyWeapons)
+                    {
+                        if (weapon is { IsValid: true, Value.IsValid: true } && !weapon.Value.DesignerName.Contains("weapon_knife"))
+                        {
+
+                            player.ExecuteClientCommand("slot3");
+                            player.DropActiveWeapon();
+                            weapon.Value.Remove();
+                            
+                        }
+                    }
+                }
+            }
+        }
         if(!knifemode)
         {
             if(TWINNER == true || CTWINNER == true)
@@ -200,8 +226,19 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
                                 AddTimer(interval, () =>
                                 {
-                                    Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
-                                    
+                                    string test = mp_roundtime.ToString();
+                                    string test2 = mp_roundtime_defuse.ToString();
+                                    string test3 = mp_team_intro_time.ToString();
+                                    if (test.Contains(',') || test2.Contains(',') || test3.Contains(','))
+                                    {
+                                        string replacedValue = test.Replace(',', '.');
+                                        string replacedValue2 = test2.Replace(',', '.');
+                                        string replacedValue3 = test3.Replace(',', '.');
+                                        Server.ExecuteCommand($"mp_team_intro_time {replacedValue3}; sv_buy_status_override -1; mp_roundtime {replacedValue}; mp_roundtime_defuse {replacedValue2}; mp_give_player_c4 1; mp_restartgame 1");
+                                    }else
+                                    {
+                                        Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                    }
                                     if (Config.AllowAllTalkOnKnifeRound)
                                     {
                                         Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
@@ -226,8 +263,19 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
                                 AddTimer(interval, () =>
                                 {
-                                    Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
-                                    
+                                    string test = mp_roundtime.ToString();
+                                    string test2 = mp_roundtime_defuse.ToString();
+                                    string test3 = mp_team_intro_time.ToString();
+                                    if (test.Contains(',') || test2.Contains(',') || test3.Contains(','))
+                                    {
+                                        string replacedValue = test.Replace(',', '.');
+                                        string replacedValue2 = test2.Replace(',', '.');
+                                        string replacedValue3 = test3.Replace(',', '.');
+                                        Server.ExecuteCommand($"mp_team_intro_time {replacedValue3}; sv_buy_status_override -1; mp_roundtime {replacedValue}; mp_roundtime_defuse {replacedValue2}; mp_give_player_c4 1; mp_restartgame 1");
+                                    }else
+                                    {
+                                        Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                    }
                                     if (Config.AllowAllTalkOnKnifeRound)
                                     {
                                         Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
@@ -263,8 +311,19 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
                                 AddTimer(interval, () =>
                                 {
-                                    Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
-                                    
+                                    string test = mp_roundtime.ToString();
+                                    string test2 = mp_roundtime_defuse.ToString();
+                                    string test3 = mp_team_intro_time.ToString();
+                                    if (test.Contains(',') || test2.Contains(',') || test3.Contains(','))
+                                    {
+                                        string replacedValue = test.Replace(',', '.');
+                                        string replacedValue2 = test2.Replace(',', '.');
+                                        string replacedValue3 = test3.Replace(',', '.');
+                                        Server.ExecuteCommand($"mp_team_intro_time {replacedValue3}; sv_buy_status_override -1; mp_roundtime {replacedValue}; mp_roundtime_defuse {replacedValue2}; mp_give_player_c4 1; mp_restartgame 1");
+                                    }else
+                                    {
+                                        Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                    }
                                     if (Config.AllowAllTalkOnKnifeRound)
                                     {
                                         Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
@@ -289,8 +348,19 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
                                 AddTimer(interval, () =>
                                 {
-                                    Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
-                                    
+                                    string test = mp_roundtime.ToString();
+                                    string test2 = mp_roundtime_defuse.ToString();
+                                    string test3 = mp_team_intro_time.ToString();
+                                    if (test.Contains(',') || test2.Contains(',') || test3.Contains(','))
+                                    {
+                                        string replacedValue = test.Replace(',', '.');
+                                        string replacedValue2 = test2.Replace(',', '.');
+                                        string replacedValue3 = test3.Replace(',', '.');
+                                        Server.ExecuteCommand($"mp_team_intro_time {replacedValue3}; sv_buy_status_override -1; mp_roundtime {replacedValue}; mp_roundtime_defuse {replacedValue2}; mp_give_player_c4 1; mp_restartgame 1");
+                                    }else
+                                    {
+                                        Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                    }
                                     if (Config.AllowAllTalkOnKnifeRound)
                                     {
                                         Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
@@ -315,7 +385,19 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
                                 AddTimer(interval, () =>
                                 {
-                                    Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                    string test = mp_roundtime.ToString();
+                                    string test2 = mp_roundtime_defuse.ToString();
+                                    string test3 = mp_team_intro_time.ToString();
+                                    if (test.Contains(',') || test2.Contains(',') || test3.Contains(','))
+                                    {
+                                        string replacedValue = test.Replace(',', '.');
+                                        string replacedValue2 = test2.Replace(',', '.');
+                                        string replacedValue3 = test3.Replace(',', '.');
+                                        Server.ExecuteCommand($"mp_team_intro_time {replacedValue3}; sv_buy_status_override -1; mp_roundtime {replacedValue}; mp_roundtime_defuse {replacedValue2}; mp_give_player_c4 1; mp_restartgame 1");
+                                    }else
+                                    {
+                                        Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                    }
                                     
                                     if (Config.AllowAllTalkOnKnifeRound)
                                     {
@@ -381,13 +463,11 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
             mp_roundtime = ConVar.Find("mp_roundtime")!.GetPrimitiveValue<float>();
             mp_roundtime_defuse = ConVar.Find("mp_roundtime_defuse")!.GetPrimitiveValue<float>();
             mp_team_intro_time = ConVar.Find("mp_team_intro_time")!.GetPrimitiveValue<float>();
-            mp_freezetime = ConVar.Find("mp_freezetime")!.GetPrimitiveValue<int>();
             sv_alltalk = ConVar.Find("sv_alltalk")!.GetPrimitiveValue<bool>();
             sv_full_alltalk = ConVar.Find("sv_full_alltalk")!.GetPrimitiveValue<bool>();
             sv_talk_enemy_dead = ConVar.Find("sv_talk_enemy_dead")!.GetPrimitiveValue<bool>();
             sv_talk_enemy_living = ConVar.Find("sv_talk_enemy_living")!.GetPrimitiveValue<bool>();
             sv_deadtalk = ConVar.Find("sv_deadtalk")!.GetPrimitiveValue<bool>();
-
             knifemode = true;
             onroundstart = true;
         }
@@ -422,33 +502,31 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
         if (@event == null) return HookResult.Continue;
         var player = @event.Userid;
         if (player == null || !player.IsValid || player.PlayerPawn == null || !player.PlayerPawn.IsValid || player.PlayerPawn.Value == null || !player.PlayerPawn.Value.IsValid)return HookResult.Continue;
+        var playerid = player.SteamID;
         if(knifemode && BlockTeam)
         {
-           Server.NextFrame(() =>
+            if (!OnSpawn.ContainsKey(playerid))
             {
-                AddTimer(0.1f, () =>
+                OnSpawn.Add(playerid, true);
+            }
+
+            if (OnSpawn.ContainsKey(playerid))
+            {
+                if(Config.GiveArmorOnKnifeRound == 1)
                 {
-                    foreach (var weapon in player.PlayerPawn.Value.WeaponServices!.MyWeapons)
+                    player.GiveNamedItem("item_kevlar");
+                }else if(Config.GiveArmorOnKnifeRound == 2)
+                {
+                    player.GiveNamedItem("item_assaultsuit");
+                }
+                Server.NextFrame(() =>
+                {
+                    AddTimer(2.0f, () =>
                     {
-                        if (weapon is { IsValid: true, Value.IsValid: true } && !weapon.Value.DesignerName.Contains("weapon_knife"))
-                        {
-
-                            player.ExecuteClientCommand("slot3");
-                            player.DropActiveWeapon();
-                            weapon.Value.Remove();
-
-                        }
-                    }
-                    if(Config.GiveArmorOnKnifeRound == 1)
-                    {
-                        player.GiveNamedItem("item_kevlar");
-                    }else if(Config.GiveArmorOnKnifeRound == 2)
-                    {
-                        player.GiveNamedItem("item_assaultsuit");
-                    } 
-                        
+                        OnSpawn.Remove(playerid); 
                     }, TimerFlags.STOP_ON_MAPCHANGE);
-            });
+                });
+            }
         }else if(!knifemode)
         {
             if(TWINNER == true || CTWINNER == true)
@@ -578,7 +656,19 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
                         AddTimer(interval, () =>
                         {
-                            Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                            string test = mp_roundtime.ToString();
+                                    string test2 = mp_roundtime_defuse.ToString();
+                                    string test3 = mp_team_intro_time.ToString();
+                                    if (test.Contains(',') || test2.Contains(',') || test3.Contains(','))
+                                    {
+                                        string replacedValue = test.Replace(',', '.');
+                                        string replacedValue2 = test2.Replace(',', '.');
+                                        string replacedValue3 = test3.Replace(',', '.');
+                                        Server.ExecuteCommand($"mp_team_intro_time {replacedValue3}; sv_buy_status_override -1; mp_roundtime {replacedValue}; mp_roundtime_defuse {replacedValue2}; mp_give_player_c4 1; mp_restartgame 1");
+                                    }else
+                                    {
+                                        Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                    }
                             
                             if (Config.AllowAllTalkOnKnifeRound)
                             {
@@ -621,7 +711,19 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
                         AddTimer(interval, () =>
                         {
-                            Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                            string test = mp_roundtime.ToString();
+                                    string test2 = mp_roundtime_defuse.ToString();
+                                    string test3 = mp_team_intro_time.ToString();
+                                    if (test.Contains(',') || test2.Contains(',') || test3.Contains(','))
+                                    {
+                                        string replacedValue = test.Replace(',', '.');
+                                        string replacedValue2 = test2.Replace(',', '.');
+                                        string replacedValue3 = test3.Replace(',', '.');
+                                        Server.ExecuteCommand($"mp_team_intro_time {replacedValue3}; sv_buy_status_override -1; mp_roundtime {replacedValue}; mp_roundtime_defuse {replacedValue2}; mp_give_player_c4 1; mp_restartgame 1");
+                                    }else
+                                    {
+                                        Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                    }
                             
                             if (Config.AllowAllTalkOnKnifeRound)
                             {
@@ -687,8 +789,19 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
                         AddTimer(interval, () =>
                         {
-                            Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
-                            
+                            string test = mp_roundtime.ToString();
+                                    string test2 = mp_roundtime_defuse.ToString();
+                                    string test3 = mp_team_intro_time.ToString();
+                                    if (test.Contains(',') || test2.Contains(',') || test3.Contains(','))
+                                    {
+                                        string replacedValue = test.Replace(',', '.');
+                                        string replacedValue2 = test2.Replace(',', '.');
+                                        string replacedValue3 = test3.Replace(',', '.');
+                                        Server.ExecuteCommand($"mp_team_intro_time {replacedValue3}; sv_buy_status_override -1; mp_roundtime {replacedValue}; mp_roundtime_defuse {replacedValue2}; mp_give_player_c4 1; mp_restartgame 1");
+                                    }else
+                                    {
+                                        Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                    }
                             if (Config.AllowAllTalkOnKnifeRound)
                             {
                                 Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
@@ -732,8 +845,19 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
                         AddTimer(interval, () =>
                         {
-                            Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_freezetime {mp_freezetime}; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
-                            
+                            string test = mp_roundtime.ToString();
+                                    string test2 = mp_roundtime_defuse.ToString();
+                                    string test3 = mp_team_intro_time.ToString();
+                                    if (test.Contains(',') || test2.Contains(',') || test3.Contains(','))
+                                    {
+                                        string replacedValue = test.Replace(',', '.');
+                                        string replacedValue2 = test2.Replace(',', '.');
+                                        string replacedValue3 = test3.Replace(',', '.');
+                                        Server.ExecuteCommand($"mp_team_intro_time {replacedValue3}; sv_buy_status_override -1; mp_roundtime {replacedValue}; mp_roundtime_defuse {replacedValue2}; mp_give_player_c4 1; mp_restartgame 1");
+                                    }else
+                                    {
+                                        Server.ExecuteCommand($"mp_team_intro_time {mp_team_intro_time}; sv_buy_status_override -1; mp_roundtime {mp_roundtime}; mp_roundtime_defuse {mp_roundtime_defuse}; mp_give_player_c4 1; mp_restartgame 1");
+                                    }
                             if (Config.AllowAllTalkOnKnifeRound)
                             {
                                 Server.ExecuteCommand($"sv_alltalk {sv_alltalk}; sv_deadtalk {sv_deadtalk}; sv_full_alltalk {sv_full_alltalk}; sv_talk_enemy_dead {sv_talk_enemy_dead}; sv_talk_enemy_living {sv_talk_enemy_living};");
@@ -747,6 +871,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
 
     public override void Unload(bool hotReload)
     {
+        OnSpawn.Clear();
         _rtvCountT.Clear();
         _rtvCountCT.Clear();
         knifemode = false;
@@ -761,6 +886,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
     }
     private void OnMapEnd()
     {
+        OnSpawn.Clear();
         _rtvCountT.Clear();
         _rtvCountCT.Clear();
         knifemode = false;
