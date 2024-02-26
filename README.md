@@ -1,4 +1,4 @@
-# [CS2] Knife-Round (1.0.7)
+# [CS2] Knife-Round (1.0.8)
 
 ### Creates An Additional Round With Knifes After Warmup
 
@@ -91,6 +91,11 @@
 
 ## .:[ Change Log ]:.
 ```
+(1.0.8)
+-Fix Some Bugs
+-Fix Exploit Drop Gun Before Strip
+-Fix [Lunix] KnifeRoundTimer Carry To All Rounds
+
 (1.0.7)
 -Fix Some Bugs
 -Fix Remove Gloves
