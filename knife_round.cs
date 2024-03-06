@@ -23,13 +23,13 @@ public class KnifeRoundConfig : BasePluginConfig
     [JsonPropertyName("KnifeRoundTimer")] public float KnifeRoundTimer { get; set; } = 1;
     [JsonPropertyName("VoteTimer")] public float VoteTimer { get; set; } = 50;
     [JsonPropertyName("MessageKnifeStartTimer")] public float MessageKnifeStartTimer { get; set; } = 15;
-    [JsonPropertyName("AfterWinningRestartXTimes")] public int AfterWinningRestartXTimes { get; set; } = 3; 
+    [JsonPropertyName("AfterWinningRestartXTimes")] public int AfterWinningRestartXTimes { get; set; } = 3;
 }
 
 public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig> 
 {
     public override string ModuleName => "Knife Round";
-    public override string ModuleVersion => "1.0.8";
+    public override string ModuleVersion => "1.0.9";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "Creates An Additional Round With Knifes After Warmup";
     public KnifeRoundConfig Config { get; set; } = new KnifeRoundConfig();
@@ -41,7 +41,6 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
     public string mp_roundtimeFixed = "";
     public float mp_roundtime_defuse;
     public float mp_team_intro_time;
-    public float test = 1.92f;
     public bool sv_alltalk;
     public bool sv_deadtalk;
     public bool sv_full_alltalk;
@@ -140,10 +139,9 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                 string Green = "<font color='green'>";
                 string Orange = "<font color='orange'>";
                 string NextLine = "<br>";
-                string CTIMAGE = "<img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196733677636440167/Ct-patch-small-ezgif.com-resize.png' class=''>";
-                string TIMAGE = "<img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196733591003070495/Icon-t-patch-small-ezgif.com-resize.png' class=''>";
-                string KnifeLeft = "<img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196733591003070495/Icon-t-patch-small-ezgif.com-resize.png' class=''>";
-                string KnifeRight = "<img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196733591003070495/Icon-t-patch-small-ezgif.com-resize.png' class=''>";
+                string ImageOpen = "<img src='";
+                string ImageClose = "' class=''>";
+
                 if (timer > 0)
                 {
                     if (stopwatch.ElapsedMilliseconds >= 1000)
@@ -163,7 +161,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                             StringBuilder builder = new StringBuilder();
                             var required = (int)Math.Ceiling(countt * 0.6);
 
-                            builder.AppendFormat(Localizer["When_CT_Lose"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine,CTIMAGE, TIMAGE, currentVotesCT, currentVotesT, required,timer, KnifeLeft, KnifeRight);
+                            builder.AppendFormat(Localizer["When_CT_Lose"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine, currentVotesCT, currentVotesT, required,timer, ImageOpen, ImageClose);
                             var centerhtml = builder.ToString();
                             player?.PrintToCenterHtml(centerhtml);
                         }else if(player.TeamNum == 2)
@@ -171,7 +169,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                             StringBuilder builder = new StringBuilder();
                             var required = (int)Math.Ceiling(countt * 0.6);
 
-                            builder.AppendFormat(Localizer["Winner_Message"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine,CTIMAGE, TIMAGE, currentVotesCT, currentVotesT, required,timer, KnifeLeft, KnifeRight);
+                            builder.AppendFormat(Localizer["Winner_Message"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine, currentVotesCT, currentVotesT, required,timer, ImageOpen, ImageClose);
                             var centerhtml = builder.ToString();
                             player?.PrintToCenterHtml(centerhtml);
                         }
@@ -182,7 +180,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                             StringBuilder builder = new StringBuilder();
                             var required = (int)Math.Ceiling(countct * 0.6);
 
-                            builder.AppendFormat(Localizer["Winner_Message"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine,CTIMAGE, TIMAGE, currentVotesCT, currentVotesT, required,timer, KnifeLeft, KnifeRight);
+                            builder.AppendFormat(Localizer["Winner_Message"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine, currentVotesCT, currentVotesT, required,timer, ImageOpen, ImageClose);
                             var centerhtml = builder.ToString();
                             player?.PrintToCenterHtml(centerhtml);
                             
@@ -191,7 +189,7 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                             StringBuilder builder = new StringBuilder();
                             var required = (int)Math.Ceiling(countct * 0.6);
 
-                            builder.AppendFormat(Localizer["When_T_Lose"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine,CTIMAGE, TIMAGE, currentVotesCT, currentVotesT, required,timer, KnifeLeft, KnifeRight);
+                            builder.AppendFormat(Localizer["When_T_Lose"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine, currentVotesCT, currentVotesT, required,timer, ImageOpen, ImageClose);
                             var centerhtml = builder.ToString();
                             player?.PrintToCenterHtml(centerhtml);
                         }
@@ -428,15 +426,14 @@ public class KnifeRound : BasePlugin, IPluginConfig<KnifeRoundConfig>
                 string Green = "<font color='green'>";
                 string Orange = "<font color='orange'>";
                 string NextLine = "<br>";
-                string CTIMAGE = "<img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196733677636440167/Ct-patch-small-ezgif.com-resize.png' class=''>";
-                string TIMAGE = "<img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196733591003070495/Icon-t-patch-small-ezgif.com-resize.png' class=''>";
-                string KnifeLeft = "<img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196804184209633322/knife-ezgif.com-reverse.png' class=''>";
-                string KnifeRight = "<img src='https://cdn.discordapp.com/attachments/1175717468724015144/1196804174441103440/knife-ezgif.com-resize.png' class=''>";
+                string ImageOpen = "<img src='";
+                string ImageClose = "' class=''>";
 
                 foreach (var player in playerEntities)
                 {
                     StringBuilder builder = new StringBuilder();
-                    builder.AppendFormat(Localizer["Knife_Start_Message"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine,CTIMAGE, TIMAGE, string.Empty, string.Empty, string.Empty,string.Empty, KnifeLeft, KnifeRight);
+                    
+                    builder.AppendFormat(Localizer["Knife_Start_Message"], Close,Red,Cyan,Blue,DarkBlue,LightBlue,Purple,Yellow,Lime,Magenta,Pink,Grey,Green,Orange,NextLine, string.Empty, string.Empty, string.Empty,string.Empty, ImageOpen, ImageClose);
                     var centerhtml = builder.ToString();
                     player?.PrintToCenterHtml(centerhtml);
                 }
