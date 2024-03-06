@@ -1,4 +1,4 @@
-# [CS2] Knife-Round (1.0.8)
+# [CS2] Knife-Round (1.0.9)
 
 ### Creates An Additional Round With Knifes After Warmup
 
@@ -73,17 +73,14 @@
 	//        Others
 	//==========================
 	//Next Line = {14}
-	//CT IMAGE = {15}
-	//T IMAGE = {16}
-	//Current Votes On CT = {17}
-	//Current Votes On T = {18}
-	//Votes Needed = {19}
-	//Time Vote = {20}
-	//Kife Left IMAGE = {21}
-	//Kife Right IMAGE = {22}
+	//Current Votes On CT = {15}
+	//Current Votes On T = {16}
+	//Votes Needed = {17}
+	//Time Vote = {18}
+	//IMAGE = {19}IMAGE URL{20}
 
-	"Knife_Start_Message": "{21} {13}Knife Round{0} {22} {14} {14} {6}Winner Will Choose Team Side{0}",
-	"Winner_Message": "{6}Vote Which Side To Pick{0} {14} {1}==Time Left To Vote: {20} Secs =={0} {14} {7}!ct{0} {11}To Go CT Side Team{0} {14} {7}!t{0} {11}To Go T Side Team{0} {14} Votes On {15} [{17} / {19}] {14} Votes On {16} [{18} / {19}]",
+	"Knife_Start_Message": "{19}https://i.imgur.com/fV6lerG.png{20} {13}Knife Round{0} {19}https://i.imgur.com/BiIaTFk.png{20} {14} {14} {6}Winner Will Choose Team Side{0}",
+	"Winner_Message": "{6}Vote Which Side To Pick{0} {14} {1}==Time Left To Vote: {18} Secs =={0} {14} {7}!ct{0} {11}To Go CT Side Team{0} {14} {7}!t{0} {11}To Go T Side Team{0} {14} Votes On {19}https://i.imgur.com/o2kWYOA.png{20} [{15} / {17}] {14} Votes On {19}https://i.imgur.com/m0b0TLv.png{20} [{16} / {17}]",
 	"When_T_Lose": "{13}Waitng For{0} {3}CT's{0} {13}To Vote{0}",
 	"When_CT_Lose": "{13}Waitng For{0} {1}T's{0} {13}To Vote{0}"
 }
@@ -91,6 +88,10 @@
 
 ## .:[ Change Log ]:.
 ```
+(1.0.9)
+-Fix Some Bugs
+-Added {19}IMAGE URL{20}
+
 (1.0.8)
 -Fix Some Bugs
 -Fix Exploit Drop Gun Before Strip
