@@ -1,6 +1,0 @@
-{
-	"Knife_Start_Message": "{19}https://i.imgur.com/fV6lerG.png{20} {13}Knife Round{0} {19}https://i.imgur.com/BiIaTFk.png{20} {14} {14} {6}Zwycięzska drużyna wybiera stronę{0}",
-	"Winner_Message": "{6}Zagłosuj, aby wybrać drużynę!{0} {14} {1}==Pozostały czas: {18} sek. =={0} {14} {7}!ct aby zagłosować{0} {11}wpisz na czacie{0} {14} {7}!t aby zagłosować{0} {11}wpisz na czacie{0} {14} Głosowanie na {19}https://i.imgur.com/o2kWYOA.png{20} [{15} / {17}] {14} Głosowanie na {19}https://i.imgur.com/m0b0TLv.png{20} [{16} / {17}]",
-	"When_T_Lose": "{13}Oczekuje na głosowanie{0} {3}CT's{0} {13}Głosuje za{0}",
-	"When_CT_Lose": "{13}Oczekuje na głosowanie{0} {1}T's{0} {13}Głosuje za{0}"
-}

@@ -1,6 +1,0 @@
-{
-	"Knife_Start_Message": "{19}https://i.imgur.com/fV6lerG.png{20} {13}Nažu Raunds{0} {19}https://i.imgur.com/BiIaTFk.png{20} {14} {14} {6}Uzvarētāji izvēlēsies komandu kurā spēlēt{0}",
-	"Winner_Message": "{6}Balso lai izvēlētos komandu{0} {14} {1}==Laiks palicis: {18} sek. =={0} {14} {7}!ct{0} {11}CT komanda{0} {14} {7}!t{0} {11}T komanda{0} {14} Balsis par {19}https://i.imgur.com/o2kWYOA.png{20} [{15} / {17}] {14} Balsis par {19}https://i.imgur.com/m0b0TLv.png{20} [{16} / {17}]",
-	"When_T_Lose": "{13}Gaidam līdz{0} {3}CT{0} {13}komanda pabeigs balsot{0}",
-	"When_CT_Lose": "{13}Gaidam līdz{0} {1}T{0} {13}komanda pabeigs balsot{0}"
-}
