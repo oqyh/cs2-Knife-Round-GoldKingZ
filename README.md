@@ -3,7 +3,7 @@
 <a href="https://discord.com/invite/U7AuQhu"><img src="https://discord.com/api/guilds/651838917687115806/widget.png?style=banner2"></a>
 
 ***
-# [CS2] Knife-Round-GoldKingZ (1.1.0)
+# [CS2] Knife-Round-GoldKingZ (1.1.1)
 
 ### Creates An Additional Round With Knifes After Warmup
 
@@ -23,6 +23,12 @@
 ## .:[ Configuration ]:.
 ```json
 {
+  //Minimum Players Needed To Enable Knife Round Plugin
+  "MinimumPlayersToEnableKnifePlugin": 6,
+
+  //Count Bots As Players In MinimumPlayersToEnableKnifePlugin
+  "CountBotsAsPlayers": false,
+
   // Enable Vote Change Teams After Knife Round Win?
   "EnableVoteTeamSideAfterWinning": true,
 
@@ -77,18 +83,26 @@
 	//{nextline} = Print On Next Line
 	//==========================
 	
-    "chat.message.knife.start": "{green}Gold KingZ | Knife Round! {nextline} {green}Gold KingZ | Knife Round! {nextline} {green}Gold KingZ | Knife Round!",
-    "chat.message.match.start": "{green}Gold KingZ | LIVE! {nextline} {green}Gold KingZ | LIVE! {nextline} {green}Gold KingZ | LIVE!",
+	"chat.message.knife.ignored": "{green}Gold KingZ | {grey}Knife Round Ignored Less Players ( {yellow}{0} Current {grey}/ {yellow}{1} Needed {grey})",
+	"chat.message.knife.start": "{green}Gold KingZ | Knife Round! {nextline} {green}Gold KingZ | Knife Round! {nextline} {green}Gold KingZ | Knife Round!",
+	"chat.message.match.start": "{green}Gold KingZ | LIVE! {nextline} {green}Gold KingZ | LIVE! {nextline} {green}Gold KingZ | LIVE!",
     
-    "hud.message.kniferoundstarted": "<img src='https://raw.githubusercontent.com/oqyh/cs2-Knife-Round-GoldKingZ/main/Resources/knifeleft.png' class=''> <font color='orange'>Knife Round <img src='https://raw.githubusercontent.com/oqyh/cs2-Knife-Round-GoldKingZ/main/Resources/kniferight.png' class=''> <br> <br> <font color='blueviolet'>Winner Will Choose Team Side </font>",
+    
+	"hud.message.kniferoundstarted": "<img src='https://raw.githubusercontent.com/oqyh/cs2-Knife-Round-GoldKingZ/main/Resources/knifeleft.png' class=''> <font color='orange'>Knife Round <img src='https://raw.githubusercontent.com/oqyh/cs2-Knife-Round-GoldKingZ/main/Resources/kniferight.png' class=''> <br> <br> <font color='blueviolet'>Winner Will Choose Team Side </font>",
 	"hud.message.winnerteam": "<font color='green'>Vote Which Side To Pick <br> <font color='darkred'> = Time Left To Vote: {0} Secs = <br> <font color='yellow'>!ct <font color='grey'>To Go CT Side Team <br> <font color='yellow'>!t <font color='grey'>To Go T Side Team <br> <font color='grey'>Votes On <img src='https://raw.githubusercontent.com/oqyh/cs2-Knife-Round-GoldKingZ/main/Resources/ctimg.png' class=''> <font color='green'>[{1} <font color='grey'>/ <font color='green'>{3}] <br> <font color='grey'>Votes On <img src='https://raw.githubusercontent.com/oqyh/cs2-Knife-Round-GoldKingZ/main/Resources/timg.png' class=''> <font color='green'>[{2} <font color='grey'>/ <font color='green'>{3}] </font>",
-    "hud.message.loseteam.ct": "<font color='yellow'>Waitng For <font color='red'>T's <font color='yellow'>To Vote </font>",
-    "hud.message.loseteam.t": "<font color='yellow'>Waitng For <font color='RoyalBlue'>CT's <font color='yellow'>To Vote </font>"
+	"hud.message.loseteam.ct": "<font color='yellow'>Waitng For <font color='red'>T's <font color='yellow'>To Vote </font>",
+	"hud.message.loseteam.t": "<font color='yellow'>Waitng For <font color='RoyalBlue'>CT's <font color='yellow'>To Vote </font>"
 }
 ```
 
 ## .:[ Change Log ]:.
 ```
+(1.1.1)
+-Added MinimumPlayersToEnableKnifePlugin
+-Added CountBotsAsPlayers
+-Added CountBotsAsPlayers
+-Added Lang chat.message.knife.ignored 
+
 (1.1.0)
 -Upgrade Net.7 To Net.8
 -Rework Knife-Round Plugin
