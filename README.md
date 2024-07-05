@@ -100,7 +100,6 @@
 (1.1.1)
 -Added MinimumPlayersToEnableKnifePlugin
 -Added CountBotsAsPlayers
--Added CountBotsAsPlayers
 -Added Lang chat.message.knife.ignored 
 
 (1.1.0)
