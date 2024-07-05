@@ -16,7 +16,7 @@ namespace Knife_Round_GoldKingZ;
 public class KnifeRoundGoldKingZ : BasePlugin
 {
     public override string ModuleName => "Knife Round (Creates An Additional Round With Knifes After Warmup)";
-    public override string ModuleVersion => "1.1.0";
+    public override string ModuleVersion => "1.1.1";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "https://github.com/oqyh";
 	internal static IStringLocalizer? Stringlocalizer;
@@ -42,7 +42,7 @@ public class KnifeRoundGoldKingZ : BasePlugin
 
     public void OnTick()
     {
-        if(!Globals.PrepareKnifeRound)
+        if(!Globals.DisableKnife && !Globals.PrepareKnifeRound)
         {
             if(Globals.KnifeRoundStarted && Globals.KnifeModeStartMessage && !string.IsNullOrEmpty(Localizer["hud.message.kniferoundstarted"]))
             {
@@ -141,7 +141,7 @@ public class KnifeRoundGoldKingZ : BasePlugin
 
     public HookResult OnEventRoundEnd(EventRoundEnd @event, GameEventInfo info)
     {
-        if(@event == null)return HookResult.Continue;
+        if(Globals.DisableKnife || @event == null)return HookResult.Continue;
 
         if(Globals.KnifeRoundStarted)
         {
@@ -200,7 +200,7 @@ public class KnifeRoundGoldKingZ : BasePlugin
 
     public HookResult OnEventPlayerSpawn(EventPlayerSpawn @event, GameEventInfo info)
     {
-        if(@event == null)return HookResult.Continue;
+        if(Globals.DisableKnife || @event == null)return HookResult.Continue;
 
         var player = @event.Userid;
         if (player == null || !player.IsValid)return HookResult.Continue;
@@ -254,17 +254,39 @@ public class KnifeRoundGoldKingZ : BasePlugin
     }
     public HookResult OnEventRoundPrestart(EventRoundPrestart @event, GameEventInfo info)
     {
-        if(@event == null)return HookResult.Continue;
+        if(Globals.DisableKnife ||@event == null)return HookResult.Continue;
+        
         if(Globals.PrepareKnifeRound)
         {
+            if(Configs.GetConfigData().CountBotsAsPlayers && Helper.GetPlayersCount(true) < Configs.GetConfigData().MinimumPlayersToEnableKnifePlugin || !Configs.GetConfigData().CountBotsAsPlayers && Helper.GetPlayersCount(false) < Configs.GetConfigData().MinimumPlayersToEnableKnifePlugin)
+            {
+                string roundtime = Globals.mp_roundtime.ToString().Replace(',', '.');
+                string roundtimeDefuse = Globals.mp_roundtime_defuse.ToString().Replace(',', '.');
+                string teamIntroTime = Globals.mp_team_intro_time.ToString().Replace(',', '.');
+                Server.ExecuteCommand($"mp_team_intro_time {teamIntroTime}; sv_buy_status_override -1; mp_roundtime {roundtime}; mp_roundtime_defuse {roundtimeDefuse}; mp_give_player_c4 1");
+                if (Configs.GetConfigData().AllowAllTalkOnKnifeRound)
+                {
+                    Server.ExecuteCommand($"sv_alltalk {Globals.sv_alltalk}; sv_deadtalk {Globals.sv_deadtalk}; sv_full_alltalk {Globals.sv_full_alltalk}; sv_talk_enemy_dead {Globals.sv_talk_enemy_dead}; sv_talk_enemy_living {Globals.sv_talk_enemy_living}");
+                }
+
+                Server.ExecuteCommand($"mp_restartgame 3");
+                if (!string.IsNullOrEmpty(Localizer["chat.message.knife.ignored"]))
+                {
+                    Helper.AdvancedPrintToServer(Localizer["chat.message.knife.ignored"], Helper.GetPlayersNeeded(), Configs.GetConfigData().MinimumPlayersToEnableKnifePlugin);
+                }
+
+                Globals.DisableKnife = true;
+                return HookResult.Continue;
+            }
             Globals.RemoveWeapons = true;
         }
         return HookResult.Continue;
     }
     
+    
     public HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
     {
-        if(@event == null)return HookResult.Continue;
+        if(Globals.DisableKnife || @event == null)return HookResult.Continue;
 
         if(Globals.PrepareKnifeRound)
         {
@@ -331,7 +353,7 @@ public class KnifeRoundGoldKingZ : BasePlugin
 
     public HookResult OnEventPlayerChat(EventPlayerChat @event, GameEventInfo info)
     {
-        if(!Configs.GetConfigData().EnableVoteTeamSideAfterWinning || @event == null)return HookResult.Continue;
+        if(Globals.DisableKnife || !Configs.GetConfigData().EnableVoteTeamSideAfterWinning || @event == null)return HookResult.Continue;
 
         var eventplayer = @event.Userid;
         var eventmessage = @event.Text;
@@ -452,7 +474,7 @@ public class KnifeRoundGoldKingZ : BasePlugin
             Server.ExecuteCommand($"mp_team_intro_time {teamIntroTime}; sv_buy_status_override -1; mp_roundtime {roundtime}; mp_roundtime_defuse {roundtimeDefuse}; mp_give_player_c4 1");
             if (Configs.GetConfigData().AllowAllTalkOnKnifeRound)
             {
-                Server.ExecuteCommand($"sv_alltalk {Globals.sv_alltalk}; sv_deadtalk {Globals.sv_deadtalk}; sv_full_alltalk {Globals.sv_full_alltalk}; sv_talk_enemy_dead {Globals.sv_talk_enemy_dead}; sv_talk_enemy_living {Globals.sv_talk_enemy_living};");
+                Server.ExecuteCommand($"sv_alltalk {Globals.sv_alltalk}; sv_deadtalk {Globals.sv_deadtalk}; sv_full_alltalk {Globals.sv_full_alltalk}; sv_talk_enemy_dead {Globals.sv_talk_enemy_dead}; sv_talk_enemy_living {Globals.sv_talk_enemy_living}");
             }
 
             int x = Configs.GetConfigData().AfterWinningRestartXTimes;

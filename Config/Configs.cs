@@ -82,6 +82,8 @@ namespace Knife_Round_GoldKingZ.Config
 
         public class ConfigData
         {
+            public int MinimumPlayersToEnableKnifePlugin  { get; set; }
+            public bool CountBotsAsPlayers { get; set; }
             public bool EnableVoteTeamSideAfterWinning { get; set; }
             public bool FreezePlayersOnVoteStarted { get; set; }
             public bool BlockTeamChangeOnVotingAndKnifeRound { get; set; }
@@ -116,6 +118,8 @@ namespace Knife_Round_GoldKingZ.Config
             
             public ConfigData()
             {
+                MinimumPlayersToEnableKnifePlugin = 6;
+                CountBotsAsPlayers = false;
                 EnableVoteTeamSideAfterWinning = true;
                 FreezePlayersOnVoteStarted = true;
                 BlockTeamChangeOnVotingAndKnifeRound = true;

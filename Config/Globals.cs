@@ -8,7 +8,7 @@ public class Globals
     public static List<ulong> VoteCountT = new();
     
     public static Stopwatch Stopwatch = new Stopwatch();
-
+    public static bool DisableKnife = false;
     public static bool CTWINNER = false;
     public static bool TWINNER = false;
     public static float Timer = 0;

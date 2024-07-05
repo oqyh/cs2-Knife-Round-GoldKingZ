@@ -3,6 +3,7 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Utils;
+using Knife_Round_GoldKingZ.Config;
 
 namespace Knife_Round_GoldKingZ;
 
@@ -107,9 +108,20 @@ public class Helper
     {
         return Utilities.GetPlayers().Count(p => p != null && p.IsValid && !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected && p.TeamNum == (byte)CsTeam.Terrorist);
     }
-    public static int GetAllCount()
+    public static int GetPlayersCount(bool IncludeBots = false)
     {
-        return Utilities.GetPlayers().Count(p => p != null && p.IsValid && !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected);
+        return Utilities.GetPlayers().Count(p => p != null && p.IsValid && p.Connected == PlayerConnectedState.PlayerConnected && (IncludeBots || (!p.IsBot && !p.IsHLTV)));
+    }
+    public static int GetPlayersNeeded()
+    {
+        if (Configs.GetConfigData().CountBotsAsPlayers)
+        {
+            return GetPlayersCount(true);
+        }
+        else
+        {
+            return GetPlayersCount(false);
+        }
     }
     public static void ClearVariables()
     {
