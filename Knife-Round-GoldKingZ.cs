@@ -16,7 +16,7 @@ namespace Knife_Round_GoldKingZ;
 public class KnifeRoundGoldKingZ : BasePlugin
 {
     public override string ModuleName => "Knife Round (Creates An Additional Round With Knifes After Warmup)";
-    public override string ModuleVersion => "1.1.1";
+    public override string ModuleVersion => "1.1.2";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "https://github.com/oqyh";
 	internal static IStringLocalizer? Stringlocalizer;

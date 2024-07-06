@@ -125,6 +125,7 @@ public class Helper
     }
     public static void ClearVariables()
     {
+        Globals.DisableKnife = false;
         Globals.VoteCountCT.Clear();
         Globals.VoteCountT.Clear();
         
