@@ -3,7 +3,7 @@
 <a href="https://discord.com/invite/U7AuQhu"><img src="https://discord.com/api/guilds/651838917687115806/widget.png?style=banner2"></a>
 
 ***
-# [CS2] Knife-Round-GoldKingZ (1.1.1)
+# [CS2] Knife-Round-GoldKingZ (1.1.2)
 
 ### Creates An Additional Round With Knifes After Warmup
 
@@ -97,6 +97,9 @@
 
 ## .:[ Change Log ]:.
 ```
+(1.1.2)
+-Fix Plugin Will Stop Working On Next Map
+
 (1.1.1)
 -Added MinimumPlayersToEnableKnifePlugin
 -Added CountBotsAsPlayers
