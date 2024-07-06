@@ -4,6 +4,7 @@ namespace Knife_Round_GoldKingZ;
 
 public class Globals
 {
+    public static CounterStrikeSharp.API.Modules.Timers.Timer? WarmUpTimer;
     public static List<ulong> VoteCountCT = new();
     public static List<ulong> VoteCountT = new();
     
@@ -19,6 +20,7 @@ public class Globals
     public static float mp_roundtime;
     public static float mp_roundtime_defuse;
     public static float mp_team_intro_time;
+    public static float mp_warmuptime;
     public static bool sv_alltalk;
     public static bool sv_deadtalk;
     public static bool sv_full_alltalk;

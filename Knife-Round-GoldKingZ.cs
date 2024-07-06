@@ -16,7 +16,7 @@ namespace Knife_Round_GoldKingZ;
 public class KnifeRoundGoldKingZ : BasePlugin
 {
     public override string ModuleName => "Knife Round (Creates An Additional Round With Knifes After Warmup)";
-    public override string ModuleVersion => "1.1.2";
+    public override string ModuleVersion => "1.1.3";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "https://github.com/oqyh";
 	internal static IStringLocalizer? Stringlocalizer;
@@ -258,26 +258,6 @@ public class KnifeRoundGoldKingZ : BasePlugin
         
         if(Globals.PrepareKnifeRound)
         {
-            if(Configs.GetConfigData().CountBotsAsPlayers && Helper.GetPlayersCount(true) < Configs.GetConfigData().MinimumPlayersToEnableKnifePlugin || !Configs.GetConfigData().CountBotsAsPlayers && Helper.GetPlayersCount(false) < Configs.GetConfigData().MinimumPlayersToEnableKnifePlugin)
-            {
-                string roundtime = Globals.mp_roundtime.ToString().Replace(',', '.');
-                string roundtimeDefuse = Globals.mp_roundtime_defuse.ToString().Replace(',', '.');
-                string teamIntroTime = Globals.mp_team_intro_time.ToString().Replace(',', '.');
-                Server.ExecuteCommand($"mp_team_intro_time {teamIntroTime}; sv_buy_status_override -1; mp_roundtime {roundtime}; mp_roundtime_defuse {roundtimeDefuse}; mp_give_player_c4 1");
-                if (Configs.GetConfigData().AllowAllTalkOnKnifeRound)
-                {
-                    Server.ExecuteCommand($"sv_alltalk {Globals.sv_alltalk}; sv_deadtalk {Globals.sv_deadtalk}; sv_full_alltalk {Globals.sv_full_alltalk}; sv_talk_enemy_dead {Globals.sv_talk_enemy_dead}; sv_talk_enemy_living {Globals.sv_talk_enemy_living}");
-                }
-
-                Server.ExecuteCommand($"mp_restartgame 3");
-                if (!string.IsNullOrEmpty(Localizer["chat.message.knife.ignored"]))
-                {
-                    Helper.AdvancedPrintToServer(Localizer["chat.message.knife.ignored"], Helper.GetPlayersNeeded(), Configs.GetConfigData().MinimumPlayersToEnableKnifePlugin);
-                }
-
-                Globals.DisableKnife = true;
-                return HookResult.Continue;
-            }
             Globals.RemoveWeapons = true;
         }
         return HookResult.Continue;
@@ -314,6 +294,7 @@ public class KnifeRoundGoldKingZ : BasePlugin
             Globals.mp_roundtime = ConVar.Find("mp_roundtime")!.GetPrimitiveValue<float>();
             Globals.mp_roundtime_defuse = ConVar.Find("mp_roundtime_defuse")!.GetPrimitiveValue<float>();
             Globals.mp_team_intro_time = ConVar.Find("mp_team_intro_time")!.GetPrimitiveValue<float>();
+            Globals.mp_warmuptime = ConVar.Find("mp_warmuptime")!.GetPrimitiveValue<float>();
             Globals.sv_alltalk = ConVar.Find("sv_alltalk")!.GetPrimitiveValue<bool>();
             Globals.sv_full_alltalk = ConVar.Find("sv_full_alltalk")!.GetPrimitiveValue<bool>();
             Globals.sv_talk_enemy_dead = ConVar.Find("sv_talk_enemy_dead")!.GetPrimitiveValue<bool>();
@@ -321,6 +302,11 @@ public class KnifeRoundGoldKingZ : BasePlugin
             Globals.sv_deadtalk = ConVar.Find("sv_deadtalk")!.GetPrimitiveValue<bool>();
             Globals.PrepareKnifeRound = true;
             Globals.OnWarmUp = true;
+
+            float time = Globals.mp_warmuptime - 1.0f;
+            Globals.WarmUpTimer?.Kill();
+            Globals.WarmUpTimer = null;
+            Globals.WarmUpTimer = AddTimer(time, WarmUpTimer_Callback, TimerFlags.STOP_ON_MAPCHANGE);
         }
 
         if(Globals.PrepareKnifeRound)
@@ -340,6 +326,26 @@ public class KnifeRoundGoldKingZ : BasePlugin
         }
 
         return HookResult.Continue;
+    }
+    private void WarmUpTimer_Callback()
+    {
+        if(Configs.GetConfigData().CountBotsAsPlayers && Helper.GetPlayersCount(true) < Configs.GetConfigData().MinimumPlayersToEnableKnifePlugin || !Configs.GetConfigData().CountBotsAsPlayers && Helper.GetPlayersCount(false) < Configs.GetConfigData().MinimumPlayersToEnableKnifePlugin)
+        {
+            string roundtime = Globals.mp_roundtime.ToString().Replace(',', '.');
+            string roundtimeDefuse = Globals.mp_roundtime_defuse.ToString().Replace(',', '.');
+            string teamIntroTime = Globals.mp_team_intro_time.ToString().Replace(',', '.');
+            Server.ExecuteCommand($"mp_team_intro_time {teamIntroTime}; sv_buy_status_override -1; mp_roundtime {roundtime}; mp_roundtime_defuse {roundtimeDefuse}; mp_give_player_c4 1");
+            if (Configs.GetConfigData().AllowAllTalkOnKnifeRound)
+            {
+                Server.ExecuteCommand($"sv_alltalk {Globals.sv_alltalk}; sv_deadtalk {Globals.sv_deadtalk}; sv_full_alltalk {Globals.sv_full_alltalk}; sv_talk_enemy_dead {Globals.sv_talk_enemy_dead}; sv_talk_enemy_living {Globals.sv_talk_enemy_living}");
+            }
+            if (!string.IsNullOrEmpty(Localizer["chat.message.knife.ignored"]))
+            {
+                Helper.AdvancedPrintToServer(Localizer["chat.message.knife.ignored"], Helper.GetPlayersNeeded(), Configs.GetConfigData().MinimumPlayersToEnableKnifePlugin);
+            }
+
+            Globals.DisableKnife = true;
+        }
     }
 
     private HookResult OnCommandJoinTeam(CCSPlayerController? player, CommandInfo commandInfo)
