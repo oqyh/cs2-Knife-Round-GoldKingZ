@@ -1,11 +1,16 @@
 {
-    "chat.message.knife.ignored": "{green}Gold KingZ | {grey}Knife Round Ignored Less Players ( {yellow}{0} Current {grey}/ {yellow}{1} Needed {grey})",
-    "chat.message.knife.start": "{green}Gold KingZ | Knife Round! {nextline} {green}Gold KingZ | Knife Round! {nextline} {green}Gold KingZ | Knife Round!",
-    "chat.message.match.start": "{green}Gold KingZ | LIVE! {nextline} {green}Gold KingZ | LIVE! {nextline} {green}Gold KingZ | LIVE!",
+    "chat.message.knife.prepare": "{grey}[{green}Gold KingZ{grey}] After WarmUp Knife Round Will Start {green}Winner {grey}Choose Team Side",
+    "chat.message.knife.ignored": "{grey}[{green}Gold KingZ{grey}] Knife Round Ignored Less Players [{green}{0} {grey}/ {green}{1} {grey}Needed{grey}]",
+    "chat.message.knife.start": "{grey}[{green}Gold KingZ{grey}] {lime}Knife Round! {nextline} {grey}[{green}Gold KingZ{grey}] {lime}Knife Round! {nextline} {grey}[{green}Gold KingZ{grey}] {lime}Knife Round!",
+    "chat.message.winner.team.ct": "{grey}[{green}Gold KingZ{grey}] Knife Round End Winner Team {darkblue}CounterTerrorist",
+    "chat.message.winner.team.t": "{grey}[{green}Gold KingZ{grey}] Knife Round End Winner Team {darkred}Terrorist",
+    "chat.message.winner.team.report": "{grey}----------------------{green}[Reports]{grey}---------------------- {nextline} {grey}{darkblue}[CounterTerrorist] {nextline} {grey}Total Alive Players: {yellow}{0} {grey}| Total Healths: {yellow}{1} {nextline} {grey}{darkred}[Terrorist] {nextline} {grey}Total Alive Players: {yellow}{2} {grey}| Total Healths: {yellow}{3} {nextline} {grey}-------------------------------------------------------",
+    
+    "chat.message.match.start": "{grey}[{green}Gold KingZ{grey}] {lime}Match Live! {nextline} {grey}[{green}Gold KingZ{grey}] {lime}Match Live! {nextline} {grey}[{green}Gold KingZ{grey}] {lime}Match Live!",
 
 
     "hud.message.kniferoundstarted": "<img src='https://raw.githubusercontent.com/oqyh/cs2-Knife-Round-GoldKingZ/main/Resources/knifeleft.png' class=''> <font color='orange'>Knife Round <img src='https://raw.githubusercontent.com/oqyh/cs2-Knife-Round-GoldKingZ/main/Resources/kniferight.png' class=''> <br> <br> <font color='blueviolet'>Winner Will Choose Team Side </font>",
-    "hud.message.winnerteam": "<font color='green'>Vote Which Side To Pick <br> <font color='darkred'> = Time Left To Vote: {0} Secs = <br> <font color='yellow'>!ct <font color='grey'>To Go CT Side Team <br> <font color='yellow'>!t <font color='grey'>To Go T Side Team <br> <font color='grey'>Votes On <img src='https://raw.githubusercontent.com/oqyh/cs2-Knife-Round-GoldKingZ/main/Resources/ctimg.png' class=''> <font color='green'>[{1} <font color='grey'>/ <font color='green'>{3}] <br> <font color='grey'>Votes On <img src='https://raw.githubusercontent.com/oqyh/cs2-Knife-Round-GoldKingZ/main/Resources/timg.png' class=''> <font color='green'>[{2} <font color='grey'>/ <font color='green'>{3}] </font>",
-    "hud.message.loseteam.ct": "<font color='yellow'>Waitng For <font color='red'>T's <font color='yellow'>To Vote </font>",
-    "hud.message.loseteam.t": "<font color='yellow'>Waitng For <font color='RoyalBlue'>CT's <font color='yellow'>To Vote </font>"
+    "hud.message.winnerteam": "<font color='green'>Vote Which Side To Pick <br> <font color='darkred'> = Time Left To Vote: {0} Secs = <br> <font color='yellow'>!ct <font color='grey'>To Vote CT Side Team <br> <font color='yellow'>!t <font color='grey'>To Vote T Side Team <br> <font color='grey'>Votes On <img src='https://raw.githubusercontent.com/oqyh/cs2-Knife-Round-GoldKingZ/main/Resources/ctimg.png' class=''> <font color='green'>[{1} <font color='grey'>/ <font color='green'>{3}] <br> <font color='grey'>Votes On <img src='https://raw.githubusercontent.com/oqyh/cs2-Knife-Round-GoldKingZ/main/Resources/timg.png' class=''> <font color='green'>[{2} <font color='grey'>/ <font color='green'>{3}] </font>",
+    "hud.message.loseteam.ct": "<font color='yellow'>Waitng For <font color='red'>T's <font color='yellow'>To Vote <br> <font color='darkred'> = Time Left To Vote: {0} Secs = </font>",
+    "hud.message.loseteam.t": "<font color='yellow'>Waitng For <font color='RoyalBlue'>CT's <font color='yellow'>To Vote <br> <font color='darkred'> = Time Left To Vote: {0} Secs = </font>"
 }

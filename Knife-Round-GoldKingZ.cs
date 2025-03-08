@@ -9,512 +9,313 @@ using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Memory;
 using Microsoft.Extensions.Localization;
 using Knife_Round_GoldKingZ.Config;
+using CounterStrikeSharp.API.Core.Attributes.Registration;
+using CounterStrikeSharp.API.Modules.Entities;
+using CounterStrikeSharp.API.Core.Translations;
 
 namespace Knife_Round_GoldKingZ;
 
-[MinimumApiVersion(164)]
 public class KnifeRoundGoldKingZ : BasePlugin
 {
     public override string ModuleName => "Knife Round (Creates An Additional Round With Knifes After Warmup)";
-    public override string ModuleVersion => "1.1.3";
+    public override string ModuleVersion => "1.1.4";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "https://github.com/oqyh";
-	internal static IStringLocalizer? Stringlocalizer;
-	
-
+    public static KnifeRoundGoldKingZ Instance { get; set; } = new();
+    public Globals g_Main = new();
+    private readonly PlayerChat _PlayerChat = new();
     public override void Load(bool hotReload)
     {
+        Instance = this;
         Configs.Load(ModuleDirectory);
-        Stringlocalizer = Localizer;
         Configs.Shared.CookiesModule = ModuleDirectory;
+        Configs.Shared.StringLocalizer = Localizer;
 
-        AddCommandListener("jointeam", OnCommandJoinTeam, HookMode.Pre);
-
-        RegisterEventHandler<EventPlayerChat>(OnEventPlayerChat, HookMode.Post);
-        RegisterEventHandler<EventPlayerSpawn>(OnEventPlayerSpawn, HookMode.Post);
         RegisterEventHandler<EventRoundStart>(OnRoundStart);
         RegisterEventHandler<EventRoundPrestart>(OnEventRoundPrestart);
+        RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
         RegisterEventHandler<EventRoundEnd>(OnEventRoundEnd);
 
         RegisterListener<Listeners.OnTick>(OnTick);
         RegisterListener<Listeners.OnMapEnd>(OnMapEnd);
+        
+        AddCommandListener("say", OnPlayerChat, HookMode.Post);
+        AddCommandListener("say_team", OnPlayerChatTeam, HookMode.Post);
+        AddCommandListener("jointeam", OnCommandJoinTeam, HookMode.Pre);
     }
 
     public void OnTick()
     {
-        if(!Globals.DisableKnife && !Globals.PrepareKnifeRound)
+        if(!g_Main.ShowCenter)return;
+        
+        if(g_Main.GameMode == 1 || g_Main.GameMode == 2)
         {
-            if(Globals.KnifeRoundStarted && Globals.KnifeModeStartMessage && !string.IsNullOrEmpty(Localizer["hud.message.kniferoundstarted"]))
+            TimeSpan elapsedTime = DateTime.Now - g_Main.LastTickTime;
+            if (elapsedTime.TotalSeconds >= 1)
             {
-                foreach (var allplayers in Helper.GetAllController())
+                if (g_Main.TickTime > 1)
                 {
-                    if (allplayers == null || !allplayers.IsValid || allplayers.IsBot || allplayers.IsHLTV) continue;
-
-                    StringBuilder builder = new StringBuilder();
-                    builder.AppendFormat(Localizer["hud.message.kniferoundstarted"]);
-                    var centerhtml = builder.ToString();
-                    allplayers.PrintToCenterHtml(centerhtml);
+                    g_Main.TickTime -= 1;
+                }else if (g_Main.TickTime <= 1)
+                {
+                    if(g_Main.GameMode == 1)
+                    {
+                        g_Main.ShowCenter = false;
+                    }else if(g_Main.GameMode == 2)
+                    {
+                        Helper.GetWantedTeam();
+                        Helper.SwitchTeams();
+                        g_Main.GameMode = 3;
+                    }
+                    
                 }
-            }else if(Configs.GetConfigData().EnableVoteTeamSideAfterWinning && !Globals.KnifeRoundStarted)
+                g_Main.LastTickTime = DateTime.Now;
+            }
+
+            StringBuilder builder = new StringBuilder();
+
+            int VotesToCt = g_Main.Player_Data.Values.Count(data => data.TeamVoted == CsTeam.CounterTerrorist);
+            int VotesToT = g_Main.Player_Data.Values.Count(data => data.TeamVoted == CsTeam.Terrorist);
+            bool winnerct = g_Main.WinerTeam == CsTeam.CounterTerrorist? true: false;
+            bool winnert = g_Main.WinerTeam == CsTeam.Terrorist? true: false;
+            int Votes_Requred = Helper.GetPlayersCount(false,false,winnerct,winnert);
+            var required = (int)Math.Ceiling(Votes_Requred * 0.6);
+
+            foreach (var players in Helper.GetPlayersController())
             {
-                if(Globals.TWINNER == true || Globals.CTWINNER == true)
+                if(players == null || !players.IsValid)continue;
+                if(g_Main.GameMode == 1)
                 {
-                    if (Globals.Timer > 0)
+                    string localizeduse = Configs.Shared.StringLocalizer!["hud.message.kniferoundstarted"];
+                    builder.AppendFormat(localizeduse);
+                    var centerhtml = builder.ToString();
+                    players.PrintToCenterHtml(centerhtml);
+                }else if(g_Main.GameMode == 2)
+                {
+                    if(players.TeamNum == (byte)g_Main.WinerTeam)
                     {
-                        if (Globals.Stopwatch.ElapsedMilliseconds >= 1000)
-                        {
-                            Globals.Timer--;
-                            Globals.Stopwatch.Restart();
-                        }
-
-                        foreach (var allplayers in Helper.GetAllController())
-                        {
-                            if (allplayers == null || !allplayers.IsValid || allplayers.IsBot || allplayers.IsHLTV) continue;
-                            
-                            if(Globals.TWINNER)
-                            {
-                                if(allplayers.TeamNum == (byte)CsTeam.CounterTerrorist && !string.IsNullOrEmpty(Localizer["hud.message.loseteam.ct"]))
-                                {
-                                    StringBuilder builder = new StringBuilder();
-                                    var countt = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.Terrorist && !p.IsBot && !p.IsHLTV);
-                                    var required = (int)Math.Ceiling(countt * 0.6);
-                                    builder.AppendFormat(Localizer["hud.message.loseteam.ct", Globals.Timer, Globals.currentVotesCT, Globals.currentVotesT, required]);
-                                    var centerhtml = builder.ToString();
-                                    allplayers.PrintToCenterHtml(centerhtml);
-                                }else if(allplayers.TeamNum == (byte)CsTeam.Terrorist && !string.IsNullOrEmpty(Localizer["hud.message.winnerteam"]))
-                                {
-                                    StringBuilder builder = new StringBuilder();
-                                    var countt = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.Terrorist && !p.IsBot && !p.IsHLTV);
-                                    var required = (int)Math.Ceiling(countt * 0.6);
-                                    builder.AppendFormat(Localizer["hud.message.winnerteam", Globals.Timer, Globals.currentVotesCT, Globals.currentVotesT, required]);
-                                    var centerhtml = builder.ToString();
-                                    allplayers.PrintToCenterHtml(centerhtml);
-                                }
-                            }else if(Globals.CTWINNER)
-                            {
-                                if(allplayers.TeamNum == (byte)CsTeam.Terrorist && !string.IsNullOrEmpty(Localizer["hud.message.loseteam.t"]))
-                                {
-                                    StringBuilder builder = new StringBuilder();
-                                    var counct = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.CounterTerrorist && !p.IsBot && !p.IsHLTV);
-                                    var required = (int)Math.Ceiling(counct * 0.6);
-                                    builder.AppendFormat(Localizer["hud.message.loseteam.t", Globals.Timer, Globals.currentVotesCT, Globals.currentVotesT, required]);
-                                    var centerhtml = builder.ToString();
-                                    allplayers.PrintToCenterHtml(centerhtml);
-                                }else if(allplayers.TeamNum == (byte)CsTeam.CounterTerrorist && !string.IsNullOrEmpty(Localizer["hud.message.winnerteam"]))
-                                {
-                                    StringBuilder builder = new StringBuilder();
-                                    var countt = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.CounterTerrorist && !p.IsBot && !p.IsHLTV);
-                                    var required = (int)Math.Ceiling(countt * 0.6);
-                                    builder.AppendFormat(Localizer["hud.message.winnerteam", Globals.Timer, Globals.currentVotesCT, Globals.currentVotesT, required]);
-                                    var centerhtml = builder.ToString();
-                                    allplayers.PrintToCenterHtml(centerhtml);
-                                }
-                            }
-                        }
-                    }
-
-                    if (Globals.Timer < 1)
+                        string localizeduse = Configs.Shared.StringLocalizer!["hud.message.winnerteam", g_Main.TickTime, VotesToCt, VotesToT, required];
+                        builder.AppendFormat(localizeduse);
+                        var centerhtml = builder.ToString();
+                        players.PrintToCenterHtml(centerhtml);
+                    }else
                     {
-                        if ((Globals.TWINNER && Globals.currentVotesCT > Globals.currentVotesT) || (Globals.CTWINNER && Globals.currentVotesT > Globals.currentVotesCT))
-                        {
-                            Helper.SwitchTeams(Globals.TWINNER ? CsTeam.CounterTerrorist : CsTeam.Terrorist);
-                            ResetValuesAndExecuteCommands(); 
-                        }
-
-                        if ((Globals.TWINNER && Globals.currentVotesT > Globals.currentVotesCT) || (Globals.CTWINNER && Globals.currentVotesCT > Globals.currentVotesT))
-                        {
-                            ResetValuesAndExecuteCommands();
-                        }
-
-                        if ((Globals.TWINNER || Globals.CTWINNER) && Globals.currentVotesT == Globals.currentVotesCT)
-                        {
-                            ResetValuesAndExecuteCommands();
-                        }
-
-                        Globals.Stopwatch.Stop();
-                        Globals.Timer = 0;
+                        string teamloc = players.TeamNum == (byte)CsTeam.Terrorist?"hud.message.loseteam.t":"hud.message.loseteam.ct";
+                        string localizeduse = Configs.Shared.StringLocalizer![teamloc, g_Main.TickTime, VotesToCt, VotesToT, required];
+                        builder.AppendFormat(localizeduse);
+                        var centerhtml = builder.ToString();
+                        players.PrintToCenterHtml(centerhtml);
                     }
+                    
                 }
             }
         }
+    }
+
+    private HookResult OnPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
+    {
+        if (@event == null)return HookResult.Continue;
+        var player = @event.Userid;
+
+        if (player == null || !player.IsValid)return HookResult.Continue;
+
+        if (g_Main.Player_Data.ContainsKey(player))g_Main.Player_Data.Remove(player);
+
+        return HookResult.Continue;
+    }
+    private HookResult OnPlayerChat(CCSPlayerController? player, CommandInfo info)
+	{
+        if (player == null || !player.IsValid)return HookResult.Continue;
+
+        _PlayerChat.OnPlayerChat(player, info, false);
+
+        return HookResult.Continue;
+    }
+    private HookResult OnPlayerChatTeam(CCSPlayerController? player, CommandInfo info)
+	{
+        if (player == null || !player.IsValid)return HookResult.Continue;
+
+        _PlayerChat.OnPlayerChat(player, info, true);
+
+        return HookResult.Continue;
+    }
+
+
+    public HookResult OnEventRoundPrestart(EventRoundPrestart @event, GameEventInfo info)
+    {
+        if(@event == null)return HookResult.Continue;
+
+
+        if(Helper.IsWarmup())
+        {
+            Helper.FreezeCheck();
+            if(g_Main.GameMode != 0)Helper.ClearVariables();
+            if(!g_Main.OneTime)
+            {
+                if(!string.IsNullOrEmpty(Configs.GetConfigData().Execute_Cfg_On_Warmup))
+                {
+                    Server.ExecuteCommand("execifexists "+ Configs.GetConfigData().Execute_Cfg_On_Warmup);
+                    Server.ExecuteCommand($"mp_restartgame 1");
+                }
+                Helper.GetOrginalConvars();
+                g_Main.WarmUpTimer = AddTimer(g_Main.mp_warmuptime - 1.0f, CheckPlayer_Callback, TimerFlags.STOP_ON_MAPCHANGE);
+                Helper.AdvancedServerPrintToChatAll(Configs.Shared.StringLocalizer!["chat.message.knife.prepare"]);
+                g_Main.OneTime = true;
+            }
+            return HookResult.Continue;
+        }
+
+        switch(g_Main.GameMode)
+        {
+            case -1:
+                g_Main.BlockTeamChange = false;
+                Helper.AdvancedServerPrintToChatAll(Configs.Shared.StringLocalizer!["chat.message.knife.ignored"], Helper.GetPlayersCount(Configs.GetConfigData().Count_Bots_As_Players), Configs.GetConfigData().Minimum_Players_Needed);
+                break;
+            case 1:
+                g_Main.BlockTeamChange = false;
+                if(Configs.GetConfigData().Block_Switching_Teams_On == 1 || Configs.GetConfigData().Block_Switching_Teams_On == 2 || Configs.GetConfigData().Block_Switching_Teams_On == 3)
+                {
+                    g_Main.BlockTeamChange = true;
+                }
+                g_Main.TickTime = Configs.GetConfigData().Knife_Round_Center_Message_Time;
+                g_Main.LastTickTime = DateTime.Now;
+                g_Main.ShowCenter = true;
+                Helper.AdvancedServerPrintToChatAll(Configs.Shared.StringLocalizer!["chat.message.knife.start"]);
+                break;
+            case 2:
+                g_Main.BlockTeamChange = false;
+                if(Configs.GetConfigData().Block_Switching_Teams_On == 2 || Configs.GetConfigData().Block_Switching_Teams_On == 3)
+                {
+                    g_Main.BlockTeamChange = true;
+                }
+                g_Main.TickTime = Configs.GetConfigData().Vote_Team_Side_Time;
+                g_Main.LastTickTime = DateTime.Now;
+                g_Main.ShowCenter = true;
+                break;
+            case 3:
+                g_Main.BlockTeamChange = false;
+                if(Configs.GetConfigData().Block_Switching_Teams_On == 3)
+                {
+                    g_Main.BlockTeamChange = true;
+                }
+                Helper.MatchLive();
+                g_Main.GameMode = 4;
+                break;
+        }
+        return HookResult.Continue;
+    }
+
+    public HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
+    {
+        if(@event == null)return HookResult.Continue;
+
+        if(g_Main.GameMode == 1)
+        {
+            g_Main.ForceStripe?.Kill();
+            g_Main.ForceStripe = null;
+            g_Main.ForceStripe = AddTimer(1.0f, ForceStripe_Callback, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
+        }
+        Helper.FreezeCheck();
+        return HookResult.Continue;
     }
 
     public HookResult OnEventRoundEnd(EventRoundEnd @event, GameEventInfo info)
     {
-        if(Globals.DisableKnife || @event == null)return HookResult.Continue;
-
-        if(Globals.KnifeRoundStarted)
+        if(@event == null)return HookResult.Continue;        
+        
+        switch(g_Main.GameMode)
         {
-            Globals.Stopwatch.Start();
-            Globals.Timer = Configs.GetConfigData().VoteXTimeInSecs;
-
-            int countt = 0;
-            int countct = 0;
-
-            foreach (var ctplayers in Helper.GetCounterTerroristController())
-            {
-                if(ctplayers == null || !ctplayers.IsValid || ctplayers.PlayerPawn == null || !ctplayers.PlayerPawn.IsValid || ctplayers.PlayerPawn.Value == null || !ctplayers.PlayerPawn.Value.IsValid)continue;
-
-                if (ctplayers.TeamNum == (int)CsTeam.CounterTerrorist && ctplayers.PlayerPawn.Value.LifeState == (byte)LifeState_t.LIFE_ALIVE)
+            case -1:
+                g_Main.BlockTeamChange = false;
+                g_Main.GameMode = -2;
+                break;
+            case 1:
+                g_Main.BlockTeamChange = false;
+                g_Main.ForceStripe?.Kill();
+                g_Main.ForceStripe = null;
+                Helper.GetWinnerTeam();
+                if(Configs.GetConfigData().After_Winning_Vote_Team_Side)
                 {
-                    countct++;
-                }
-            }
-
-            foreach (var tplayers in Helper.GetTerroristController())
-            {
-                if(tplayers == null || !tplayers.IsValid || tplayers.PlayerPawn == null || !tplayers.PlayerPawn.IsValid || tplayers.PlayerPawn.Value == null || !tplayers.PlayerPawn.Value.IsValid)continue;
-
-                if (tplayers.TeamNum == (int)CsTeam.Terrorist && tplayers.PlayerPawn.Value.LifeState == (byte)LifeState_t.LIFE_ALIVE)
+                    g_Main.GameMode = 2;
+                    Helper.ModifyConvar_WaitingForVoting();
+                }else
                 {
-                    countt++;
-                }
-            }
-
-            if (countt > countct)
-            {
-                Globals.BlockTeam = true;
-                Globals.TWINNER = true;
-                Globals.KnifeRoundStarted = false;
-            }
-            else if (countct > countt)
-            {
-                Globals.BlockTeam = true;
-                Globals.CTWINNER = true;
-                Globals.KnifeRoundStarted = false;
-            }
-            else
-            {
-                Globals.BlockTeam = true;
-                Globals.CTWINNER = true;
-                Globals.KnifeRoundStarted = false;
-            }
-
-            if(!Configs.GetConfigData().EnableVoteTeamSideAfterWinning)
-            {
-                ResetValuesAndExecuteCommands();
-            }
-        }
-        return HookResult.Continue;
-    }
-
-    public HookResult OnEventPlayerSpawn(EventPlayerSpawn @event, GameEventInfo info)
-    {
-        if(Globals.DisableKnife || @event == null)return HookResult.Continue;
-
-        var player = @event.Userid;
-        if (player == null || !player.IsValid)return HookResult.Continue;
-
-        if(Globals.RemoveWeapons)
-        {
-            Server.NextFrame(() =>
-            {
-                AddTimer(0.1f, () =>
-                {
-                    Helper.DropAllWeaponsAndDelete(player);
-
-                    if(Configs.GetConfigData().GiveArmorOnKnifeRound == 1)
+                    if(Configs.GetConfigData().Send_Winner_Team_To_CT)
                     {
-                        player.GiveNamedItem("item_kevlar");
-                    }else if(Configs.GetConfigData().GiveArmorOnKnifeRound == 2)
-                    {
-                        player.GiveNamedItem("item_assaultsuit");
+                        g_Main.WantedTeam = CsTeam.CounterTerrorist;
                     }
-                }, TimerFlags.STOP_ON_MAPCHANGE);
-                
-            });
-        }
-        
-        if(Configs.GetConfigData().FreezePlayersOnVoteStarted)
-        {
-            if(Globals.TWINNER == true || Globals.CTWINNER == true)
-            {
-                if(player.PlayerPawn != null && player.PlayerPawn.IsValid && player.PlayerPawn.Value != null && player.PlayerPawn.Value.IsValid)
-                {
-                    Server.NextFrame(() =>
-                    {
-                        Schema.SetSchemaValue(player.PlayerPawn.Value.Handle, "CBaseEntity", "m_nActualMoveType", 0);
-                        Utilities.SetStateChanged(player.PlayerPawn.Value, "CBaseEntity", "m_MoveType");
-                    });
+                    Helper.SwitchTeams();
+                    g_Main.GameMode = 3;
+                    Helper.ModifyConvar_MatchLive();
                 }
-                
-            }else
-            {
-                if(player.PlayerPawn != null && player.PlayerPawn.IsValid && player.PlayerPawn.Value != null && player.PlayerPawn.Value.IsValid)
-                {
-                    Server.NextFrame(() =>
-                    {
-                        Schema.SetSchemaValue(player.PlayerPawn.Value.Handle, "CBaseEntity", "m_nActualMoveType", 2);
-                        Utilities.SetStateChanged(player.PlayerPawn.Value, "CBaseEntity", "m_MoveType");
-                    });
-                }
-            }
-        }
-        return HookResult.Continue;
-    }
-    public HookResult OnEventRoundPrestart(EventRoundPrestart @event, GameEventInfo info)
-    {
-        if(Globals.DisableKnife ||@event == null)return HookResult.Continue;
-        
-        if(Globals.PrepareKnifeRound)
-        {
-            Globals.RemoveWeapons = true;
-        }
-        return HookResult.Continue;
-    }
-    
-    
-    public HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
-    {
-        if(Globals.DisableKnife || @event == null)return HookResult.Continue;
-
-        if(Globals.PrepareKnifeRound)
-        {
-            Globals.BlockTeam = true;
-            Globals.KnifeModeStartMessage = true;
-            Globals.KnifeRoundStarted = true;
-            AddTimer(Configs.GetConfigData().GiveHUDMessageOnStartKnifeRoundForXSecs, () =>
-            {
-                Globals.KnifeModeStartMessage = false;
-            }, TimerFlags.STOP_ON_MAPCHANGE);
-
-            AddTimer(1.0f, () =>
-            {
-                if (!string.IsNullOrEmpty(Localizer["chat.message.knife.start"]))
-                {
-                    Helper.AdvancedPrintToServer(Localizer["chat.message.knife.start"]);
-                }
-            }, TimerFlags.STOP_ON_MAPCHANGE);
-            
-            Globals.PrepareKnifeRound = false;
-        }
-
-        if(!Globals.OnWarmUp)
-        {
-            Globals.mp_roundtime = ConVar.Find("mp_roundtime")!.GetPrimitiveValue<float>();
-            Globals.mp_roundtime_defuse = ConVar.Find("mp_roundtime_defuse")!.GetPrimitiveValue<float>();
-            Globals.mp_team_intro_time = ConVar.Find("mp_team_intro_time")!.GetPrimitiveValue<float>();
-            Globals.mp_warmuptime = ConVar.Find("mp_warmuptime")!.GetPrimitiveValue<float>();
-            Globals.sv_alltalk = ConVar.Find("sv_alltalk")!.GetPrimitiveValue<bool>();
-            Globals.sv_full_alltalk = ConVar.Find("sv_full_alltalk")!.GetPrimitiveValue<bool>();
-            Globals.sv_talk_enemy_dead = ConVar.Find("sv_talk_enemy_dead")!.GetPrimitiveValue<bool>();
-            Globals.sv_talk_enemy_living = ConVar.Find("sv_talk_enemy_living")!.GetPrimitiveValue<bool>();
-            Globals.sv_deadtalk = ConVar.Find("sv_deadtalk")!.GetPrimitiveValue<bool>();
-            Globals.PrepareKnifeRound = true;
-            Globals.OnWarmUp = true;
-
-            float time = Globals.mp_warmuptime - 1.0f;
-            Globals.WarmUpTimer?.Kill();
-            Globals.WarmUpTimer = null;
-            Globals.WarmUpTimer = AddTimer(time, WarmUpTimer_Callback, TimerFlags.STOP_ON_MAPCHANGE);
-        }
-
-        if(Globals.PrepareKnifeRound)
-        {
-            Server.NextFrame(() =>
-            {
-                Server.ExecuteCommand($"mp_team_intro_time 0.0; sv_buy_status_override 3; mp_roundtime {Configs.GetConfigData().KnifeRoundXTimeInMins}; mp_roundtime_defuse {Configs.GetConfigData().KnifeRoundXTimeInMins}; mp_give_player_c4 0");
-                if(Configs.GetConfigData().AllowAllTalkOnKnifeRound)
-                {
-                    AddTimer(1.0f, () =>
-                    {
-                        Server.ExecuteCommand($"sv_alltalk true; sv_deadtalk true; sv_full_alltalk true; sv_talk_enemy_dead true; sv_talk_enemy_living true");
-                    }, TimerFlags.STOP_ON_MAPCHANGE);
-                    
-                }
-            });
+                break;
         }
 
         return HookResult.Continue;
     }
-    private void WarmUpTimer_Callback()
+    
+    private void ForceStripe_Callback()
     {
-        if(Configs.GetConfigData().CountBotsAsPlayers && Helper.GetPlayersCount(true) < Configs.GetConfigData().MinimumPlayersToEnableKnifePlugin || !Configs.GetConfigData().CountBotsAsPlayers && Helper.GetPlayersCount(false) < Configs.GetConfigData().MinimumPlayersToEnableKnifePlugin)
+        if(g_Main.GameMode != 1)
         {
-            string roundtime = Globals.mp_roundtime.ToString().Replace(',', '.');
-            string roundtimeDefuse = Globals.mp_roundtime_defuse.ToString().Replace(',', '.');
-            string teamIntroTime = Globals.mp_team_intro_time.ToString().Replace(',', '.');
-            Server.ExecuteCommand($"mp_team_intro_time {teamIntroTime}; sv_buy_status_override -1; mp_roundtime {roundtime}; mp_roundtime_defuse {roundtimeDefuse}; mp_give_player_c4 1");
-            if (Configs.GetConfigData().AllowAllTalkOnKnifeRound)
-            {
-                Server.ExecuteCommand($"sv_alltalk {Globals.sv_alltalk}; sv_deadtalk {Globals.sv_deadtalk}; sv_full_alltalk {Globals.sv_full_alltalk}; sv_talk_enemy_dead {Globals.sv_talk_enemy_dead}; sv_talk_enemy_living {Globals.sv_talk_enemy_living}");
-            }
-            if (!string.IsNullOrEmpty(Localizer["chat.message.knife.ignored"]))
-            {
-                Helper.AdvancedPrintToServer(Localizer["chat.message.knife.ignored"], Helper.GetPlayersNeeded(), Configs.GetConfigData().MinimumPlayersToEnableKnifePlugin);
-            }
-
-            Globals.DisableKnife = true;
+            g_Main.ForceStripe?.Kill();
+            g_Main.ForceStripe = null;
         }
+
+        foreach(var players in Helper.GetPlayersController(true, false))
+        {
+            if (g_Main.GameMode != 1) return;
+            if (players == null || !players.IsValid) continue;
+            Helper.ForceStripePlayer(players);
+        }
+
+        Helper.ClearGroundWeapons();
     }
+    private void CheckPlayer_Callback()
+    {
+        if(Helper.GetPlayersCount(Configs.GetConfigData().Count_Bots_As_Players) < Configs.GetConfigData().Minimum_Players_Needed)
+        {
+            g_Main.GameMode = -1;
+        }else
+        {
+            if(g_Main.GameMode == 0)
+            {
+                g_Main.GameMode = 1;
+                Helper.ModifyConvar_KnifeStart();
+            }
+        }
+
+        g_Main.ForceStripe?.Kill();
+        g_Main.ForceStripe = null;
+    }
+
 
     private HookResult OnCommandJoinTeam(CCSPlayerController? player, CommandInfo commandInfo)
     {
-        if (Configs.GetConfigData().BlockTeamChangeOnVotingAndKnifeRound && Globals.BlockTeam)
+        if (Configs.GetConfigData().Block_Switching_Teams_On > 0 && g_Main.BlockTeamChange)
         {
             return HookResult.Handled;
         }
         return HookResult.Continue;
     }
 
-    public HookResult OnEventPlayerChat(EventPlayerChat @event, GameEventInfo info)
-    {
-        if(Globals.DisableKnife || !Configs.GetConfigData().EnableVoteTeamSideAfterWinning || @event == null)return HookResult.Continue;
-
-        var eventplayer = @event.Userid;
-        var eventmessage = @event.Text;
-        var Caller = Utilities.GetPlayerFromUserid(eventplayer);
-        
-
-        if (Caller == null || !Caller.IsValid)return HookResult.Continue;
-
-        if (string.IsNullOrWhiteSpace(eventmessage)) return HookResult.Continue;
-        string trimmedMessageStart = eventmessage.TrimStart();
-        string message = trimmedMessageStart.TrimEnd();
-        
-        string[] CommandInGameToVoteCT = Configs.GetConfigData().CommandsInGameToVoteCT.Split(',');
-        if (CommandInGameToVoteCT.Any(cmd => cmd.Equals(message, StringComparison.OrdinalIgnoreCase)))
-        {
-            if(Globals.CTWINNER && Caller.TeamNum == (byte)CsTeam.CounterTerrorist)
-            {
-                if (Globals.VoteCountT.Contains(Caller.SteamID))
-                {
-                    Globals.VoteCountT.Remove(Caller.SteamID);
-                    Globals.currentVotesT =  Globals.currentVotesT - 1;
-                }
-                if (Globals.VoteCountCT.Contains(Caller.SteamID))return HookResult.Continue;
-                Globals.VoteCountCT.Add(Caller.SteamID);
-                Globals.currentVotesCT = Globals.VoteCountCT.Count;
-
-                var counct = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.CounterTerrorist && !p.IsBot && !p.IsHLTV);
-                var required = (int)Math.Ceiling(counct * 0.6);
-                
-                if (Globals.currentVotesCT >= required)
-                {
-                    ResetValuesAndExecuteCommands();
-                }
-
-            }else if(Globals.TWINNER && Caller.TeamNum == (byte)CsTeam.Terrorist)
-            {
-                if (Globals.VoteCountT.Contains(Caller.SteamID))
-                {
-                    Globals.VoteCountT.Remove(Caller.SteamID);
-                    Globals.currentVotesT =  Globals.currentVotesT - 1;
-                }
-                if (Globals.VoteCountCT.Contains(Caller.SteamID))return HookResult.Continue;
-                Globals.VoteCountCT.Add(Caller.SteamID);
-                Globals.currentVotesCT = Globals.VoteCountCT.Count;
-
-                var countt = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.Terrorist && !p.IsBot && !p.IsHLTV);
-                var required = (int)Math.Ceiling(countt * 0.6);
-                
-                if (Globals.currentVotesCT >= required)
-                {
-                    Helper.SwitchTeams(Globals.TWINNER ? CsTeam.CounterTerrorist : CsTeam.Terrorist);
-                    ResetValuesAndExecuteCommands(); 
-                }
-            }
-        }
-
-        string[] CommandInGameToVoteT = Configs.GetConfigData().CommandsInGameToVoteT.Split(',');
-        if (CommandInGameToVoteT.Any(cmd => cmd.Equals(message, StringComparison.OrdinalIgnoreCase)))
-        {
-            if(Globals.CTWINNER && Caller.TeamNum == (byte)CsTeam.CounterTerrorist)
-            {
-                if (Globals.VoteCountCT.Contains(Caller.SteamID))
-                {
-                    Globals.VoteCountCT.Remove(Caller.SteamID);
-                    Globals.currentVotesCT =  Globals.currentVotesCT - 1;
-                }
-                if (Globals.VoteCountT.Contains(Caller.SteamID))return HookResult.Continue;
-                Globals.VoteCountT.Add(Caller.SteamID);
-                Globals.currentVotesT = Globals.VoteCountT.Count;
-
-                var counct = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.CounterTerrorist && !p.IsBot && !p.IsHLTV);
-                var required = (int)Math.Ceiling(counct * 0.6);
-                
-                if (Globals.currentVotesT >= required)
-                {
-                    Helper.SwitchTeams(Globals.TWINNER ? CsTeam.CounterTerrorist : CsTeam.Terrorist);
-                    ResetValuesAndExecuteCommands(); 
-                }
-
-            }else if(Globals.TWINNER && Caller.TeamNum == (byte)CsTeam.Terrorist)
-            {
-                if (Globals.VoteCountCT.Contains(Caller.SteamID))
-                {
-                    Globals.VoteCountCT.Remove(Caller.SteamID);
-                    Globals.currentVotesCT =  Globals.currentVotesCT - 1;
-                }
-                if (Globals.VoteCountT.Contains(Caller.SteamID))return HookResult.Continue;
-                Globals.VoteCountT.Add(Caller.SteamID);
-                Globals.currentVotesT = Globals.VoteCountT.Count;
-
-                var countt = Utilities.GetPlayers().Count(p => p.TeamNum == (int)CsTeam.Terrorist && !p.IsBot && !p.IsHLTV);
-                var required = (int)Math.Ceiling(countt * 0.6);
-                
-                if (Globals.currentVotesT >= required)
-                {
-                    ResetValuesAndExecuteCommands(); 
-                }
-            }
-        }
-
-        return HookResult.Continue;
-    }
-
-    public void ResetValuesAndExecuteCommands()
-    {
-        Server.NextFrame(() =>
-        {
-            Globals.VoteCountT.Clear();
-            Globals.VoteCountCT.Clear();
-            Globals.TWINNER = false;
-            Globals.CTWINNER = false;
-            Globals.BlockTeam = false;
-            Globals.RemoveWeapons = false;
-
-            string roundtime = Globals.mp_roundtime.ToString().Replace(',', '.');
-            string roundtimeDefuse = Globals.mp_roundtime_defuse.ToString().Replace(',', '.');
-            string teamIntroTime = Globals.mp_team_intro_time.ToString().Replace(',', '.');
-            Server.ExecuteCommand($"mp_team_intro_time {teamIntroTime}; sv_buy_status_override -1; mp_roundtime {roundtime}; mp_roundtime_defuse {roundtimeDefuse}; mp_give_player_c4 1");
-            if (Configs.GetConfigData().AllowAllTalkOnKnifeRound)
-            {
-                Server.ExecuteCommand($"sv_alltalk {Globals.sv_alltalk}; sv_deadtalk {Globals.sv_deadtalk}; sv_full_alltalk {Globals.sv_full_alltalk}; sv_talk_enemy_dead {Globals.sv_talk_enemy_dead}; sv_talk_enemy_living {Globals.sv_talk_enemy_living}");
-            }
-
-            int x = Configs.GetConfigData().AfterWinningRestartXTimes;
-            for (int i = 1; i <= x; i++)
-            {
-                float interval = i * 2.0f;
-                int currentI = i;
-                AddTimer(interval, () =>
-                {
-                    Server.ExecuteCommand($"mp_restartgame 1");
-                    if (currentI == x)
-                    {
-                        AddTimer(4.0f, () =>
-                        {
-                            if (!string.IsNullOrEmpty(Localizer["chat.message.match.start"]))
-                            {
-                                Helper.AdvancedPrintToServer(Localizer["chat.message.match.start"]);
-                            }
-                        }, TimerFlags.STOP_ON_MAPCHANGE);
-                    }
-                }, TimerFlags.STOP_ON_MAPCHANGE);
-            }
-        });
-    }
-
 
     private void OnMapEnd()
     {
-        Helper.ClearVariables();
+        Helper.ClearVariables(true);
     }
 
     public override void Unload(bool hotReload)
     {
-        Helper.ClearVariables();
+        Helper.ClearVariables(true);
     }
+
+
+    /* [ConsoleCommand("css_test", "test")]
+    [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+    public void test(CCSPlayerController? player, CommandInfo commandInfo)
+    {
+        if(player == null || !player.IsValid )return;
+    } */
     
 }

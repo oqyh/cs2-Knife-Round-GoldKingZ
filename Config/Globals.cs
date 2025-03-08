@@ -1,36 +1,50 @@
+using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Entities.Constants;
+using CounterStrikeSharp.API.Modules.Utils;
 using System.Diagnostics;
 
 namespace Knife_Round_GoldKingZ;
 
 public class Globals
 {
-    public static CounterStrikeSharp.API.Modules.Timers.Timer? WarmUpTimer;
-    public static List<ulong> VoteCountCT = new();
-    public static List<ulong> VoteCountT = new();
+    public class PlayerDataClass
+    {
+        public CCSPlayerController Player { get; set; }
+        public CsTeam TeamVoted { get; set; }        
+        public PlayerDataClass(CCSPlayerController player, CsTeam teamVoted)
+        {
+            Player = player;
+            TeamVoted = teamVoted;
+        }
+    }
+    public Dictionary<CCSPlayerController, PlayerDataClass> Player_Data = new Dictionary<CCSPlayerController, PlayerDataClass>();
+
+    public CounterStrikeSharp.API.Modules.Timers.Timer? WarmUpTimer;
+    public CounterStrikeSharp.API.Modules.Timers.Timer? ForceStripe;
+
+    public int mp_free_armor = 0;
+
+    public float mp_roundtime = 0.0f;
+    public float mp_roundtime_defuse = 0.0f;
+    public float mp_team_intro_time = 0.0f;
+    public float mp_warmuptime = 0.0f;
     
-    public static Stopwatch Stopwatch = new Stopwatch();
-    public static bool DisableKnife = false;
-    public static bool CTWINNER = false;
-    public static bool TWINNER = false;
-    public static float Timer = 0;
 
-    public static int currentVotesT;
-    public static int currentVotesCT;
 
-    public static float mp_roundtime;
-    public static float mp_roundtime_defuse;
-    public static float mp_team_intro_time;
-    public static float mp_warmuptime;
-    public static bool sv_alltalk;
-    public static bool sv_deadtalk;
-    public static bool sv_full_alltalk;
-    public static bool sv_talk_enemy_dead;
-    public static bool sv_talk_enemy_living;
+    public bool OneTime = false;
+    public bool BlockTeamChange = false;
+    public bool sv_alltalk = false;
+    public bool sv_full_alltalk = false;
+    public bool sv_talk_enemy_dead = false;
+    public bool sv_talk_enemy_living = false;
+    public bool sv_deadtalk = false;
 
-    public static bool BlockTeam = false;
-    public static bool OnWarmUp = false;
-    public static bool PrepareKnifeRound = false;
-    public static bool KnifeRoundStarted = false;
-    public static bool KnifeModeStartMessage = false;
-    public static bool RemoveWeapons = false;
+
+    public int GameMode = 0;
+    public CsTeam WinerTeam = CsTeam.None;
+    public CsTeam WantedTeam = CsTeam.None;
+
+    public bool ShowCenter = false;
+    public int TickTime;
+    public DateTime LastTickTime;
 }
