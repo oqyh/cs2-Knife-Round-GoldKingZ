@@ -67,7 +67,7 @@ Creates An Additional Round With Knifes After Warmup
 >
 
 <details>
-<summary>🖼️ Preview Colors In Game Codes (Click to expand 🔽)</summary>
+<summary>🖼️ Preview Colors In Game (Click to expand 🔽)</summary>
 
 ![Color Preview](https://github.com/oqyh/cs2-Game-Manager/assets/48490385/3df7caa9-34a7-47da-94aa-8d682f59e85d)
 </details>
