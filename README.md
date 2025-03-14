@@ -2,7 +2,7 @@
 
 <a href="https://discord.com/invite/U7AuQhu"><img src="https://discord.com/api/guilds/651838917687115806/widget.png?style=banner2"></a>
 
-# [CS2] Knife-Round-GoldKingZ (1.1.4)
+# [CS2] Knife-Round-GoldKingZ (1.1.5)
 
 Creates An Additional Round With Knifes After Warmup
 
@@ -112,6 +112,12 @@ Creates An Additional Round With Knifes After Warmup
 
 <details>
 <summary>📋 View Version History (Click to expand 🔽)</summary>
+
+### [1.1.5]
+- Fix Center Bug Duplicated
+- Fix Swap Teams Bug
+- Fix EnableDebug
+
 
 ### [1.1.4]
 - Rework Plugin
