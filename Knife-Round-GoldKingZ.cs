@@ -18,7 +18,7 @@ namespace Knife_Round_GoldKingZ;
 public class KnifeRoundGoldKingZ : BasePlugin
 {
     public override string ModuleName => "Knife Round (Creates An Additional Round With Knifes After Warmup)";
-    public override string ModuleVersion => "1.1.4";
+    public override string ModuleVersion => "1.1.5";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "https://github.com/oqyh";
     public static KnifeRoundGoldKingZ Instance { get; set; } = new();
@@ -72,7 +72,7 @@ public class KnifeRoundGoldKingZ : BasePlugin
                 g_Main.LastTickTime = DateTime.Now;
             }
 
-            StringBuilder builder = new StringBuilder();
+            
 
             int VotesToCt = g_Main.Player_Data.Values.Count(data => data.TeamVoted == CsTeam.CounterTerrorist);
             int VotesToT = g_Main.Player_Data.Values.Count(data => data.TeamVoted == CsTeam.Terrorist);
@@ -86,6 +86,7 @@ public class KnifeRoundGoldKingZ : BasePlugin
                 if(players == null || !players.IsValid)continue;
                 if(g_Main.GameMode == 1)
                 {
+                    StringBuilder builder = new StringBuilder();
                     string localizeduse = Configs.Shared.StringLocalizer!["hud.message.kniferoundstarted"];
                     builder.AppendFormat(localizeduse);
                     var centerhtml = builder.ToString();
@@ -94,12 +95,14 @@ public class KnifeRoundGoldKingZ : BasePlugin
                 {
                     if(players.TeamNum == (byte)g_Main.WinerTeam)
                     {
+                        StringBuilder builder = new StringBuilder();
                         string localizeduse = Configs.Shared.StringLocalizer!["hud.message.winnerteam", g_Main.TickTime, VotesToCt, VotesToT, required];
                         builder.AppendFormat(localizeduse);
                         var centerhtml = builder.ToString();
                         players.PrintToCenterHtml(centerhtml);
                     }else
                     {
+                        StringBuilder builder = new StringBuilder();
                         string teamloc = players.TeamNum == (byte)CsTeam.Terrorist?"hud.message.loseteam.t":"hud.message.loseteam.ct";
                         string localizeduse = Configs.Shared.StringLocalizer![teamloc, g_Main.TickTime, VotesToCt, VotesToT, required];
                         builder.AppendFormat(localizeduse);

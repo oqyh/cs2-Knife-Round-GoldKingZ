@@ -190,9 +190,11 @@ public class Helper
     public static void DebugMessage(string message, bool prefix = true)
     {
         if (!Configs.GetConfigData().EnableDebug) return;
+
         Console.ForegroundColor = ConsoleColor.Magenta;
         string Prefix = "[Knife Round]: ";
-        Console.WriteLine(prefix?Prefix:"" + message);
+        Console.WriteLine((prefix ? Prefix : "") + message);
+
         Console.ResetColor();
     }
 
@@ -537,22 +539,21 @@ public class Helper
     public static void SwitchTeams()
     {
         var g_Main = KnifeRoundGoldKingZ.Instance.g_Main;
-
-        CsTeam wantedteam = g_Main.WantedTeam == CsTeam.None?g_Main.WinerTeam:g_Main.WantedTeam;
-        CsTeam Loserteam = g_Main.WinerTeam == CsTeam.Terrorist?CsTeam.CounterTerrorist:g_Main.WinerTeam == CsTeam.CounterTerrorist?CsTeam.Terrorist:CsTeam.Terrorist;
+        CsTeam wantedteam = g_Main.WantedTeam == CsTeam.None ? g_Main.WinerTeam : g_Main.WantedTeam;
+        CsTeam Loserteam = wantedteam == CsTeam.Terrorist ? CsTeam.CounterTerrorist : CsTeam.Terrorist;
         
-        foreach(var players in GetPlayersController(true,false))
+        foreach(var player in GetPlayersController(true, false))
         {
-            if (players == null || !players.IsValid)continue;
+            if (player == null || !player.IsValid) continue;
 
-            if(players.TeamNum == (byte)g_Main.WinerTeam)
+            if (player.TeamNum == (byte)g_Main.WinerTeam)
             {
-                players.SwitchTeam(wantedteam);
-            }else
-            {
-                players.SwitchTeam(Loserteam);
+                player.SwitchTeam(wantedteam);
             }
-            
+            else
+            {
+                player.SwitchTeam(Loserteam);
+            }
         }
 
         ModifyConvar_MatchLive();
